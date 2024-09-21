@@ -23,11 +23,10 @@ var _help_descriptions = {
 }
 
 
-
 func _ready() -> void:
 	_line_edit.grab_focus()
 	_append_line("----------------------------------------------------------------")
-	_append_line("GAMANAGE %s" % [_version])
+	_append_line("GAMANAGE CLI %s" % [_version])
 	_append_line("\"help\" と打つことでコマンド一覧が表示されます")
 	_append_line("----------------------------------------------------------------")
 
@@ -60,19 +59,23 @@ func _append_line(line: String, label_id: int = 3) -> void:
 
 
 func _parse_command(line: String) -> void:
-	var words = Array(line.split(" ", false)) # whitespace は第2引数によって除外される
+	# コマンドを whitespace で分割する
+	# whitespace 自体は第2引数によって除外される
+	var words = Array(line.split(" ", false))
+
+	# コマンドを何も入力せずに Enter を押したとき: 何もせずに終了する (単なる改行送りになる)
 	if words.size() == 0:
 		return
 
-	var is_invalid_command = true
+	# コマンドリストにないコマンドが入力されたとき: エラーを表示して終了する
+	if not words[0] in FIRST_LEVEL_COMMANDS:
+		_append_line("[color=red]%s: invalid command![/color]" % line)
+		return
+
 	match words[0]:
 		"help":
 			var help_text_list = FIRST_LEVEL_COMMANDS.map(func(v): return v + "\t\t" + _help_descriptions[v])
 			var help_text = "\n".join(help_text_list)
 			_append_line(help_text)
-			is_invalid_command = false
-		"":
-			is_invalid_command = false
-	# 不正なコマンドが入力されたとき
-	if is_invalid_command:
-		_append_line("[color=red]%s: invalid command![/color]" % line)
+		"quit":
+			get_tree().quit()
