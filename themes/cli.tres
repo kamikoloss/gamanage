@@ -1,9 +1,13 @@
 [gd_resource type="Theme" load_steps=3 format=3 uid="uid://b0nala41010j4"]
 
+[ext_resource type="StyleBox" uid="uid://daxk4j3g7l2np" path="res://themes/cli_bg_black.tres" id="1_rghcp"]
 [ext_resource type="FontFile" uid="uid://c62pdudotgvx1" path="res://themes/SOROEMONO-Regular.ttf" id="1_rycim"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kwlwr"]
 
 [resource]
 default_font = ExtResource("1_rycim")
-LineEdit/styles/normal = SubResource("StyleBoxFlat_kwlwr")
+Label/styles/normal = ExtResource("1_rghcp")
+LineEdit/styles/focus = ExtResource("1_rghcp")
+LineEdit/styles/normal = ExtResource("1_rghcp")
+LineEdit/styles/read_only = ExtResource("1_rghcp")
+RichTextLabel/styles/focus = ExtResource("1_rghcp")
+RichTextLabel/styles/normal = ExtResource("1_rghcp")

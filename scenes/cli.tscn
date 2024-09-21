@@ -47,9 +47,9 @@ theme = ExtResource("2_y108q")
 [node name="Line2D" type="Line2D" parent="CanvasLayer"]
 points = PackedVector2Array(0, 360, 1280, 360)
 width = 1.0
-default_color = Color(0, 0, 0, 1)
+default_color = Color(1, 1, 1, 0.501961)
 
 [node name="Line2D2" type="Line2D" parent="CanvasLayer"]
 points = PackedVector2Array(640, 0, 640, 720)
 width = 1.0
-default_color = Color(0, 0, 0, 1)
+default_color = Color(1, 1, 1, 0.501961)
