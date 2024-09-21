@@ -1,0 +1,9 @@
+[gd_resource type="Theme" load_steps=3 format=3 uid="uid://b0nala41010j4"]
+
+[ext_resource type="FontFile" uid="uid://c62pdudotgvx1" path="res://themes/SOROEMONO-Regular.ttf" id="1_rycim"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kwlwr"]
+
+[resource]
+default_font = ExtResource("1_rycim")
+LineEdit/styles/normal = SubResource("StyleBoxFlat_kwlwr")
