@@ -68,11 +68,16 @@ func _ready() -> void:
 	_append_line_main("GAMANAGE (CLI Mode) %s" % [_version], LineColor.GRAY)
 	_append_line_main("\"help\" と入力するとコマンド一覧が表示されます", LineColor.GRAY)
 	_append_line_main("----------------------------------------------------------------", LineColor.GRAY)
+	_append_line_main("\n", LineColor.GRAY)
 
 	# Log
 	#for color in LINE_COLOR_STRING.keys():
 	#	_append_line_log("color debug.", "Debug", color)
 	_append_line_log("ここにはヒントや行動ログが表示されます", "System", LineColor.CYAN)
+
+	# 最初の従業員を追加する
+	var employee = CoreEmployeeBase.new("主人公")
+	_core.employees.append(employee)
 
 
 func _process(delta: float) -> void:
@@ -161,10 +166,10 @@ func _exec_command(line: String) -> void:
 					"employees":
 						if words.size() <= 2:
 							is_valid_command = true
-							# list emp
+							_show_employees()
 						else:
 							is_valid_command = true
-							# show emp
+							_show_employees(int(words[2]))
 					"materials":
 						if words.size() <= 2:
 							is_valid_command = true
@@ -173,10 +178,12 @@ func _exec_command(line: String) -> void:
 							is_valid_command = true
 							_show_materials(int(words[2]))
 
-	# コマンドリストにないコマンドが入力されたとき: エラーを表示して終了する
+	# コマンドリストにないコマンドが入力されたとき: エラーを表示する
 	if not is_valid_command:
 		_append_line_main("%s: invalid command!" % line, LineColor.RED)
-		return
+	# 1行開ける
+	_append_line_main("\n") 
+
 
 func _help(words: Array) -> void:
 	var help_texts = []
@@ -195,30 +202,48 @@ func _help(words: Array) -> void:
 
 
 func _show_employees(id: int = -1) -> void:
-	pass
+	var line = "id, name, 月単価, 稼働率"
+	_append_line_main(line)
+	print(_core.employees)
+
+	if id == -1:
+		for _id in range(_core.employees.size()):
+			_show_employees_append_line(_id)
+	else:
+		# TODO: 詳細表示
+		_show_employees_append_line(id)
+
+func _show_employees_append_line(id: int) -> void:
+	var employee: CoreEmployeeBase = _core.employees[id]
+	var line = "%s, %s, %s" % [id, employee.screen_name, employee.cost]
+	_append_line_main(line)
 
 
 func _show_materials(type: int = -1) -> void:
-	var line = "id, name, 生産方法"
+	var line = "id, name, 生産手段 (/min)"
 	_append_line_main(line)	
 
 	if type == -1:
 		for _type in CoreMaterial.Type.values():
 			_show_materials_append_line(_type)
 	else:
+		# TODO: 詳細表示
 		_show_materials_append_line(type)
 
 func _show_materials_append_line(type: int) -> void:
 	var material = CoreMaterial.MATERIAL_DATA[type]
 	var how_to_out = ""
+
+	# 従業員加工: in + out
 	if material.has("in"):
 		var in_materials = material["in"].map(func(v):
 			var material_name = CoreMaterial.MATERIAL_DATA[v[0]]["name"]
 			return "%s x%s" % [material_name, v[1]]
 		)
 		how_to_out = " + ".join(in_materials) + " => %s" % [material["out"]]
-	else:
-		how_to_out = "従業員による生産"
+	# 従業員生産: out のみ
+	elif material.has("out"):
+		how_to_out = "従業員 => %s" % [material["out"]]
 
 	var line = "%s, %s, %s" % [type, material["name"], how_to_out]
 	_append_line_main(line)
