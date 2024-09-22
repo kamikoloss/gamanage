@@ -1,5 +1,7 @@
 extends Node
 
+# NOTE: \t は 半角16文字/全角8文字 が埋まるようにつける
+
 
 enum LineColor {
 	WHITE,
@@ -11,6 +13,8 @@ enum LineColor {
 	MAGENTA,
 	CYAN,
 }
+
+
 # https://docs.godotengine.org/ja/4.x/classes/class_color.html#constants
 const LINE_COLOR_STRING = {
 	LineColor.WHITE: "WHITE",
@@ -23,17 +27,14 @@ const LINE_COLOR_STRING = {
 	LineColor.CYAN: "CYAN",
 }
 
-
-const FIRST_LEVEL_COMMANDS = [
-	"help",
-	"quit",
-]
-const HELP_DESCRIPTIONS = {
-	"help": {
-		"_": "コマンド一覧を表示します",
-	},
-	"quit": {
-		"_": "ゲームを終了します",
+const HELP_DESCRIPTIONS_LV0 = {
+	"debug": "	デバッグ用コマンド詳細を表示します",
+	"help": "	コマンド一覧を表示します",
+	"quit": "	ゲームを終了します",
+}
+const HELP_DESCRIPTIONS_LV1 = {
+	"debug": {
+		"time-scale <x>": "	ゲームの進行速度を変更します",
 	},
 }
 
@@ -59,7 +60,7 @@ func _ready() -> void:
 	_append_line_main("----------------------------------------------------------------", LineColor.GRAY)
 	_append_line_main("GAMANAGE (CLI Mode) %s" % [_version], LineColor.GRAY)
 	_append_line_main("\"help\" と入力するとコマンド一覧が表示されます", LineColor.GRAY)
-	_append_line_main("\"<command> --help\" と入力するとコマンド詳細が表示されます", LineColor.GRAY)
+	_append_line_main("\"<command> help\" と入力するとコマンド詳細が表示されます", LineColor.GRAY)
 	_append_line_main("----------------------------------------------------------------", LineColor.GRAY)
 
 	# Log
@@ -71,7 +72,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	var label_3_lines = [
-		"プレイ時間		%s" % [_core.uptime_string],
+		"プレイ時間		%s (x%s)" % [_core.uptime_string, _core.time_scale],
 	]
 	_label_3.text = "\n".join(label_3_lines)
 
@@ -80,6 +81,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.is_pressed():
 		match event.keycode:
 			KEY_ENTER:
+				_append_line_main("$ " + _line_edit.text) # 打ったコマンド自体を表示する
 				_exec_command(_line_edit.text)
 				_line_edit.text = ""
 
@@ -109,9 +111,6 @@ func _append_line_log(line: String, name: String, color: LineColor = LineColor.W
 
 
 func _exec_command(line: String) -> void:
-	# 打ったコマンド自体を表示する
-	_append_line_main("$ " + _line_edit.text)
-
 	# コマンドを whitespace で分割する
 	# whitespace 自体は split() の第2引数によって除外される
 	var words = Array(line.split(" ", false))
@@ -119,17 +118,47 @@ func _exec_command(line: String) -> void:
 	# コマンドを何も入力せずに Enter を押したとき: 何もせずに終了する (単なる改行送りになる)
 	if words.size() == 0:
 		return
+
+	# コマンドを実行する
+	# 有効なコマンドに突き当たったら is_valid_command を true にする
+	var is_valid_command = false
+	match words[0]:
+		"debug":
+			if words.size() < 2:
+				is_valid_command = true
+				_exec_command_help(words)
+			else:
+				match words[1]:
+					"time-scale":
+						if words.size() < 3:
+							is_valid_command = true
+							_exec_command("debug")
+						else:
+							is_valid_command = true
+							_core.time_scale = int(words[2])
+		"help":
+			is_valid_command = true
+			_exec_command_help(words)
+		"quit":
+			is_valid_command = true
+			get_tree().quit()
+
 	# コマンドリストにないコマンドが入力されたとき: エラーを表示して終了する
-	if not words[0] in FIRST_LEVEL_COMMANDS:
+	if not is_valid_command:
 		_append_line_main("%s: invalid command!" % line, LineColor.RED)
 		return
 
-	# コマンドを実行する
-	# TODO: option
-	match words[0]:
-		"help":
-			var help_text_list = FIRST_LEVEL_COMMANDS.map(func(v): return v + "\t\t" + HELP_DESCRIPTIONS[v]["_"])
-			var help_text = "\n".join(help_text_list)
-			_append_line_main(help_text)
-		"quit":
-			get_tree().quit()
+func _exec_command_help(words: Array) -> void:
+	var help_texts = []
+
+	if words[0] == "help":
+		var descs = HELP_DESCRIPTIONS_LV0
+		help_texts = descs.keys().map(func(v): return v + descs[v])
+	elif words.size() == 1:
+		var descs = HELP_DESCRIPTIONS_LV1[words[0]]
+		help_texts = descs.keys().map(func(v): return "%s %s" % [words[0], v] + descs[v])
+	elif words.size() == 2:
+		pass
+
+	var help_text = "\n".join(help_texts)
+	_append_line_main(help_text, LineColor.YELLOW)
