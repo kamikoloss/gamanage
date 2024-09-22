@@ -4,7 +4,7 @@ class_name Core
 extends Node
 
 
-# プレイ時間 (s)
+# プレイ時間 (秒)
 var uptime_sec: int = 0:
 	get:
 		return _uptime_sec_stack + (Time.get_unix_time_from_system() - _wake_up_unixtime) * time_scale

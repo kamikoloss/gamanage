@@ -28,19 +28,24 @@ const LINE_COLOR_STRING = {
 
 const HELP_DESCRIPTIONS_LV0 = {
 	"debug": "	(デバッグ用コマンドの一覧を表示します)",
-	"help": "	(コマンドの一覧を表示します)",
+	"help": "	(すべてのコマンドの一覧を表示します)",
+	"list": "	(マスターデータ確認用のコマンドの一覧を表示します)",
 	"quit": "	ゲームを終了します",
-	"show": "	(データ表示用コマンドの一覧を表示します)",
+	"show": "	(所持リソース確認用コマンドの一覧を表示します)",
 }
 const HELP_DESCRIPTIONS_LV1 = {
 	"debug": {
 		"time-scale <x>": "	ゲームの進行速度を変更します",
 	},
+	"list": {
+		"mat": "		マスターデータの素材の一覧を表示します",
+		"mat <id>": "	マスターデータの素材の詳細を表示します",
+	},
 	"show": {
-		"emp": "		従業員の一覧を表示します",
-		"emp <id>": "	従業員の詳細を表示します",
-		"mat": "		素材の一覧を表示します",
-		"mat <id>": "	素材の詳細を表示します",
+		"emp": "		雇用している従業員の一覧を表示します",
+		"emp <id>": "	雇用している従業員の詳細を表示します",
+		"mat": "		所持している素材の一覧を表示します",
+		"mat <id>": "	所持している素材の詳細を表示します",
 	},
 }
 
@@ -127,9 +132,11 @@ func _append_line_log(line: String, name: String, color: LineColor = LineColor.W
 func _exec_command(line: String) -> void:
 	# コマンドを whitespace で分割する
 	# whitespace 自体は split() の第2引数によって除外される
-	var words = Array(line.split(" ", false))
+	var words: Array[String] = []
+	words.assign(Array(line.split(" ", false)))
 
-	# コマンドを何も入力せずに Enter を押したとき: 何もせずに終了する (単なる改行送りになる)
+	# コマンドを何も入力せずに Enter を押したとき:
+	# 何もせずに終了する (単なる改行送りになる)
 	if words.size() == 0:
 		return
 
@@ -153,6 +160,19 @@ func _exec_command(line: String) -> void:
 		"help":
 			is_valid_command = true
 			_help(words)
+		"list":
+			if words.size() <= 1:
+				is_valid_command = true
+				_help(words)
+			else:
+				match words[1]:
+					"mat":
+						if words.size() <= 2:
+							is_valid_command = true
+							_list_materials()
+						else:
+							is_valid_command = true
+							_list_materials(int(words[2]))
 		"quit":
 			is_valid_command = true
 			get_tree().quit()
@@ -180,6 +200,7 @@ func _exec_command(line: String) -> void:
 	# コマンドリストにないコマンドが入力されたとき: エラーを表示する
 	if not is_valid_command:
 		_append_line_main("%s: invalid command!" % line, LineColor.RED)
+
 	# 1行開ける
 	_append_line_main("\n") 
 
@@ -199,6 +220,38 @@ func _help(words: Array[String]) -> void:
 		pass
 
 	_append_line_main("\n".join(help_lines), LineColor.YELLOW)
+
+
+# -------------------------------- list --------------------------------
+
+func _list_materials(type: int = -1) -> void:
+	_append_line_main("ID, 名前, 生産手段 (/min)")
+
+	# 一覧表示
+	if type == -1:
+		for _type in CoreMaterial.Type.values():
+			_list_materials_append_line(_type)
+	# TODO: 詳細表示
+	else:
+		_list_materials_append_line(type)
+
+func _list_materials_append_line(type: int) -> void:
+	var material = CoreMaterial.MATERIAL_DATA[type]
+	var how_to_out = ""
+
+	# 従業員加工: in + out
+	if material.has("in"):
+		var in_materials = material["in"].map(func(v):
+			var material_name = CoreMaterial.MATERIAL_DATA[v[0]]["name"]
+			return "%s x%s" % [material_name, v[1]]
+		)
+		how_to_out = " + ".join(in_materials) + " =従業員=> %s" % [material["out"]]
+	# 従業員生産: out のみ
+	elif material.has("out"):
+		how_to_out = "従業員 => %s" % [material["out"]]
+
+	var line = "%s, %s, %s" % [type, material["name"], how_to_out]
+	_append_line_main(line)
 
 
 # -------------------------------- show --------------------------------
@@ -228,31 +281,12 @@ func _show_employees(id: int = -1) -> void:
 
 
 func _show_materials(type: int = -1) -> void:
-	var line = "ID, 名前, 生産手段 (/min)"
-	_append_line_main(line)	
+	_append_line_main("ID, 名前, 所持数, 増加ペース")
 
-	# 一覧表示
+	# TODO: 一覧表示
 	if type == -1:
 		for _type in CoreMaterial.Type.values():
-			_show_materials_append_line(_type)
+			pass
 	# TODO: 詳細表示
 	else:
-		_show_materials_append_line(type)
-
-func _show_materials_append_line(type: int) -> void:
-	var material = CoreMaterial.MATERIAL_DATA[type]
-	var how_to_out = ""
-
-	# 従業員加工: in + out
-	if material.has("in"):
-		var in_materials = material["in"].map(func(v):
-			var material_name = CoreMaterial.MATERIAL_DATA[v[0]]["name"]
-			return "%s x%s" % [material_name, v[1]]
-		)
-		how_to_out = " + ".join(in_materials) + " =従業員=> %s" % [material["out"]]
-	# 従業員生産: out のみ
-	elif material.has("out"):
-		how_to_out = "従業員 => %s" % [material["out"]]
-
-	var line = "%s, %s, %s" % [type, material["name"], how_to_out]
-	_append_line_main(line)
+		pass
