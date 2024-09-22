@@ -1,7 +1,6 @@
 extends Node
 
 
-# https://docs.godotengine.org/ja/4.x/classes/class_color.html#constants
 enum LineColor {
 	WHITE,
 	GRAY,
@@ -12,6 +11,7 @@ enum LineColor {
 	MAGENTA,
 	CYAN,
 }
+# https://docs.godotengine.org/ja/4.x/classes/class_color.html#constants
 const LINE_COLOR_STRING = {
 	LineColor.WHITE: "WHITE",
 	LineColor.GRAY: "GRAY",
@@ -29,10 +29,16 @@ const FIRST_LEVEL_COMMANDS = [
 	"quit",
 ]
 const HELP_DESCRIPTIONS = {
-	"help": "コマンド一覧を表示します",
-	"quit": "ゲームを終了します",
+	"help": {
+		"_": "コマンド一覧を表示します",
+	},
+	"quit": {
+		"_": "ゲームを終了します",
+	},
 }
 
+
+@export var _core: Core
 
 @export var _line_edit: LineEdit
 @export var _label_1: RichTextLabel
@@ -43,28 +49,31 @@ const HELP_DESCRIPTIONS = {
 
 var _version = "v0.0.0"
 var _label_1_lines = []
-var _label_2_lines = []
 var _label_4_lines = []
 
 
 func _ready() -> void:
 	_line_edit.grab_focus()
 
+	# Main
 	_append_line_main("----------------------------------------------------------------", LineColor.GRAY)
 	_append_line_main("GAMANAGE (CLI Mode) %s" % [_version], LineColor.GRAY)
 	_append_line_main("\"help\" と入力するとコマンド一覧が表示されます", LineColor.GRAY)
 	_append_line_main("\"<command> --help\" と入力するとコマンド詳細が表示されます", LineColor.GRAY)
 	_append_line_main("----------------------------------------------------------------", LineColor.GRAY)
 
+	# Log
 	# 色テスト
 	#for color in LINE_COLOR_STRING.keys():
 	#	_append_line_log("color debug.", "Debug", color)
-
 	_append_line_log("ここにはヒントや行動ログが表示されます", "System", LineColor.CYAN)
 
 
 func _process(delta: float) -> void:
-	pass
+	var label_3_lines = [
+		"プレイ時間		%s" % [_core.uptime_string],
+	]
+	_label_3.text = "\n".join(label_3_lines)
 
 
 func _input(event: InputEvent) -> void:
@@ -83,10 +92,6 @@ func _append_line(line: String, label_id: int = 1, color: LineColor = LineColor.
 			_label_1_lines.append(colored_line)
 			_label_1.text = "\n".join(_label_1_lines)
 			_label_1.scroll_to_line(9999)
-		2:
-			_label_2_lines.append(colored_line)
-			_label_2.text = "\n".join(_label_2_lines)
-			_label_2.scroll_to_line(9999)
 		4:
 			_label_4_lines.append(colored_line)
 			_label_4.text = "\n".join(_label_4_lines)
@@ -96,6 +101,9 @@ func _append_line_main(line: String, color: LineColor = LineColor.WHITE) -> void
 	_append_line(line, 1, color)
 
 func _append_line_log(line: String, name: String, color: LineColor = LineColor.WHITE) -> void:
+	#var datetime_dict = Time.get_datetime_dict_from_system()
+	#var datetime_string = Time.get_datetime_string_from_datetime_dict(datetime_dict, true)
+	#var line_with_name = "%s [%s] %s" % [datetime_string, name, line]
 	var line_with_name = "[%s] %s" % [name, line]
 	_append_line(line_with_name, 4, color)
 
@@ -120,7 +128,7 @@ func _exec_command(line: String) -> void:
 	# TODO: option
 	match words[0]:
 		"help":
-			var help_text_list = FIRST_LEVEL_COMMANDS.map(func(v): return v + "\t\t" + HELP_DESCRIPTIONS[v])
+			var help_text_list = FIRST_LEVEL_COMMANDS.map(func(v): return v + "\t\t" + HELP_DESCRIPTIONS[v]["_"])
 			var help_text = "\n".join(help_text_list)
 			_append_line_main(help_text)
 		"quit":
