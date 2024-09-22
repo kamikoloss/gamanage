@@ -1,3 +1,5 @@
+# ゲーム進行の総合クラス
+# 必要に応じて切り出す
 class_name Core
 extends Node
 
@@ -15,6 +17,11 @@ var uptime_string: String = "":
 var time_scale: int = 1:
 	set(value):
 		time_scale = clamp(value, 1, 1000)
+
+# 会社の資金
+var company_money: int = 1000
+# 現在所持している素材 { CoreMaterial.Type: <amount>}
+var materials = {}
 
 
 var _wake_up_unixtime = 0 # 起動開始時刻
