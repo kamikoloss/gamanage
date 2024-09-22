@@ -28,6 +28,11 @@ enum Type {
 }
 
 
+# 素材のマスターデータ
+# name: 表示名
+# in: (加工品の場合) 必要材料 [ [ CoreMaterial.Type, <amount> ], ... ]
+# out:
+# goal:
 const MATERIAL_DATA = {
 	Type.D2_1: {
 		"name": "2D 素材 (1)",

@@ -37,10 +37,10 @@ const HELP_DESCRIPTIONS_LV1 = {
 		"time-scale <x>": "	ゲームの進行速度を変更します",
 	},
 	"show": {
-		"employees": "		従業員の一覧を表示します",
-		"employees <id>": "	従業員の詳細を表示します",
-		"materials": "		素材の一覧を表示します",
-		"materials <id>": "	素材の詳細を表示します",
+		"emp": "		従業員の一覧を表示します",
+		"emp <id>": "	従業員の詳細を表示します",
+		"mat": "		素材の一覧を表示します",
+		"mat <id>": "	素材の詳細を表示します",
 	},
 }
 
@@ -68,16 +68,14 @@ func _ready() -> void:
 	_append_line_main("GAMANAGE (CLI Mode) %s" % [_version], LineColor.GRAY)
 	_append_line_main("\"help\" と入力するとコマンド一覧が表示されます", LineColor.GRAY)
 	_append_line_main("----------------------------------------------------------------", LineColor.GRAY)
-	_append_line_main("\n", LineColor.GRAY)
+	_append_line_main("\n")
 
 	# Log
-	#for color in LINE_COLOR_STRING.keys():
-	#	_append_line_log("color debug.", "Debug", color)
-	_append_line_log("ここにはヒントや行動ログが表示されます", "System", LineColor.CYAN)
+	_append_line_log("ここには行動ログやヒントが表示されます", "System", LineColor.CYAN)
 
 	# 最初の従業員を追加する
-	var employee = CoreEmployeeBase.new("主人公")
-	_core.employees.append(employee)
+	var employee = CoreEmployeeBase.new("インディー太郎")
+	_core.add_employee(employee)
 
 
 func _process(delta: float) -> void:
@@ -99,6 +97,7 @@ func _input(event: InputEvent) -> void:
 				_append_line_main("$ " + _line_edit.text) # 打ったコマンド自体を表示する
 				_exec_command(_line_edit.text)
 				_line_edit.text = ""
+			# TODO: UP キーで履歴出す
 
 
 func _append_line(line: String, label_id: int = 1, color: LineColor = LineColor.WHITE) -> void:
@@ -163,14 +162,14 @@ func _exec_command(line: String) -> void:
 				_help(words)
 			else:
 				match words[1]:
-					"employees":
+					"emp":
 						if words.size() <= 2:
 							is_valid_command = true
 							_show_employees()
 						else:
 							is_valid_command = true
 							_show_employees(int(words[2]))
-					"materials":
+					"mat":
 						if words.size() <= 2:
 							is_valid_command = true
 							_show_materials()
@@ -185,49 +184,59 @@ func _exec_command(line: String) -> void:
 	_append_line_main("\n") 
 
 
-func _help(words: Array) -> void:
-	var help_texts = []
+# -------------------------------- help --------------------------------
+
+func _help(words: Array[String]) -> void:
+	var help_lines = []
 
 	if words[0] == "help":
 		var descs = HELP_DESCRIPTIONS_LV0
-		help_texts = descs.keys().map(func(v): return v + descs[v])
+		help_lines = descs.keys().map(func(v): return v + descs[v])
 	elif words.size() == 1:
 		var descs = HELP_DESCRIPTIONS_LV1[words[0]]
-		help_texts = descs.keys().map(func(v): return "%s %s" % [words[0], v] + descs[v])
+		help_lines = descs.keys().map(func(v): return "%s %s" % [words[0], v] + descs[v])
 	elif words.size() == 2:
 		pass
 
-	var help_text = "\n".join(help_texts)
-	_append_line_main(help_text, LineColor.YELLOW)
+	_append_line_main("\n".join(help_lines), LineColor.YELLOW)
 
+
+# -------------------------------- show --------------------------------
 
 func _show_employees(id: int = -1) -> void:
-	var line = "id, name, 月単価, 稼働率"
-	_append_line_main(line)
-	print(_core.employees)
-
+	# 一覧表示
 	if id == -1:
+		_append_line_main("ID, 名前, 月単価, 稼働率")
 		for _id in range(_core.employees.size()):
-			_show_employees_append_line(_id)
+			var employee: CoreEmployeeBase = _core.employees[_id]
+			var employee_line = "%s, %s, %s" % [_id, employee.screen_name, employee.cost]
+			_append_line_main(employee_line)
+	# 詳細表示
 	else:
-		# TODO: 詳細表示
-		_show_employees_append_line(id)
-
-func _show_employees_append_line(id: int) -> void:
-	var employee: CoreEmployeeBase = _core.employees[id]
-	var line = "%s, %s, %s" % [id, employee.screen_name, employee.cost]
-	_append_line_main(line)
+		var employee: CoreEmployeeBase = _core.employees[id]
+		var rank = CoreEmployeeBase.RANK_DATA
+		var employee_lines = [
+			"名前			%s" % [employee.screen_name],
+			"性格			%s (%s)" % [employee.mbti_roll, employee.mbti_string],
+			"月単価			%s" % [employee.cost],
+			"精神力			%s (%03d)" % [employee.get_rank_string(employee.spec_mental), employee.spec_mental],
+			"コミュ力			%s (%03d)" % [employee.get_rank_string(employee.spec_communication), employee.spec_communication],
+			"エンジニア力		%s (%03d)" % [employee.get_rank_string(employee.spec_engineering), employee.spec_engineering],
+			"アート力			%s (%03d)" % [employee.get_rank_string(employee.spec_art), employee.spec_art],
+		]
+		_append_line_main("\n".join(employee_lines))
 
 
 func _show_materials(type: int = -1) -> void:
-	var line = "id, name, 生産手段 (/min)"
+	var line = "ID, 名前, 生産手段 (/min)"
 	_append_line_main(line)	
 
+	# 一覧表示
 	if type == -1:
 		for _type in CoreMaterial.Type.values():
 			_show_materials_append_line(_type)
+	# TODO: 詳細表示
 	else:
-		# TODO: 詳細表示
 		_show_materials_append_line(type)
 
 func _show_materials_append_line(type: int) -> void:
@@ -240,7 +249,7 @@ func _show_materials_append_line(type: int) -> void:
 			var material_name = CoreMaterial.MATERIAL_DATA[v[0]]["name"]
 			return "%s x%s" % [material_name, v[1]]
 		)
-		how_to_out = " + ".join(in_materials) + " => %s" % [material["out"]]
+		how_to_out = " + ".join(in_materials) + " =従業員=> %s" % [material["out"]]
 	# 従業員生産: out のみ
 	elif material.has("out"):
 		how_to_out = "従業員 => %s" % [material["out"]]

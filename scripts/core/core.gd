@@ -23,13 +23,18 @@ var time_scale: int = 1:
 		time_scale = clamp(value, 1, 10000)
 
 var company_money: int = 1000 # 会社の資金
-var employees = [] # 現在の従業員 [ CoreEmployeeBase ]
-var materials = {} # 現在の所持素材 { CoreMaterial.Type: <amount> }
+var employees: Array[CoreEmployeeBase] = [] # 現在の従業員
+var materials: Dictionary = {} # 現在の所持素材 { CoreMaterial.Type: <amount> }
 
 
-var _wake_up_unixtime = 0 # 起動開始時刻
+var _wake_up_unixtime: int = 0 # 起動開始時刻
 var _uptime_sec_stack: int = 0 # プレイ速度倍率変更時用のこれまでのプレイ時間
 
 
 func _ready() -> void:
 	_wake_up_unixtime = Time.get_unix_time_from_system()
+
+
+func add_employee(employee: CoreEmployeeBase) -> void:
+	employee.init_core(self)
+	employees.append(employee)
