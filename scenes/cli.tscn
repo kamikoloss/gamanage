@@ -7,8 +7,8 @@
 script = ExtResource("1_ihpgr")
 _line_edit = NodePath("CanvasLayer/LineEdit")
 _label_1 = NodePath("CanvasLayer/RichTextLabel")
-_label_2 = NodePath("CanvasLayer/RichTextLabel2")
-_label_3 = NodePath("CanvasLayer/RichTextLabel3")
+_label_2 = NodePath("CanvasLayer/RichTextLabel3")
+_label_3 = NodePath("CanvasLayer/RichTextLabel2")
 _label_4 = NodePath("CanvasLayer/RichTextLabel4")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
@@ -21,19 +21,22 @@ theme = ExtResource("2_y108q")
 
 [node name="RichTextLabel" type="RichTextLabel" parent="CanvasLayer"]
 offset_right = 640.0
-offset_bottom = 360.0
+offset_bottom = 680.0
 theme = ExtResource("2_y108q")
+bbcode_enabled = true
 
 [node name="RichTextLabel2" type="RichTextLabel" parent="CanvasLayer"]
-offset_left = 640.0
-offset_right = 1280.0
-offset_bottom = 360.0
-theme = ExtResource("2_y108q")
-
-[node name="RichTextLabel3" type="RichTextLabel" parent="CanvasLayer"]
+visible = false
 offset_top = 360.0
 offset_right = 640.0
 offset_bottom = 680.0
+theme = ExtResource("2_y108q")
+bbcode_enabled = true
+
+[node name="RichTextLabel3" type="RichTextLabel" parent="CanvasLayer"]
+offset_left = 640.0
+offset_right = 1280.0
+offset_bottom = 360.0
 theme = ExtResource("2_y108q")
 bbcode_enabled = true
 
@@ -43,13 +46,4 @@ offset_top = 360.0
 offset_right = 1280.0
 offset_bottom = 720.0
 theme = ExtResource("2_y108q")
-
-[node name="Line2D" type="Line2D" parent="CanvasLayer"]
-points = PackedVector2Array(0, 360, 1280, 360)
-width = 1.0
-default_color = Color(1, 1, 1, 0.501961)
-
-[node name="Line2D2" type="Line2D" parent="CanvasLayer"]
-points = PackedVector2Array(640, 0, 640, 720)
-width = 1.0
-default_color = Color(1, 1, 1, 0.501961)
+bbcode_enabled = true
