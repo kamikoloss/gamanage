@@ -22,12 +22,9 @@ var time_scale: int = 1:
 		_wake_up_unixtime = Time.get_unix_time_from_system()
 		time_scale = clamp(value, 1, 10000)
 
-# 会社の資金
-var company_money: int = 1000
-# 現在の従業員
-var employees = {}
-# 現在の所持素材 { CoreMaterial.Type: <amount>}
-var materials = {}
+var company_money: int = 1000 # 会社の資金
+var employees = [] # 現在の従業員 [ CoreEmployeeBase ]
+var materials = {} # 現在の所持素材 { CoreMaterial.Type: <amount> }
 
 
 var _wake_up_unixtime = 0 # 起動開始時刻

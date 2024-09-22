@@ -29,12 +29,20 @@ enum Type {
 
 
 const MATERIAL_DATA = {
-	Type.D2_1: { "name": "2D 素材 (1)", "max_stack": 360 },
-	Type.D3_1: { "name": "3D 素材 (1)", "max_stack": 360 },
-	Type.LOGIC_1: { "name": "ロジック (1)", "max_stack": 360 },
+	Type.D2_1: {
+		"name": "2D 素材 (1)",
+		"out": 60,
+	},
+	Type.D3_1: {
+		"name": "3D 素材 (1)",
+		"out": 60,
+	},
+	Type.LOGIC_1: {
+		"name": "ロジック (1)",
+		"out": 60,
+	},
 	Type.RPG_1: {
 		"name": "RPG ゲーム (1)",
-		"max_stack": 360,
 		"in": [[Type.D2_1, 60], [Type.LOGIC_1, 60]],
 		"out": 30,
 		"goal": 120,
