@@ -17,7 +17,7 @@ enum Type {
 	BGM_1,
 	VOICE_1,
 	MUSIC_1,
-	LOGIC_1,
+	PROGRAM_1,
 	TEXT_1, TEXT_2,
 	SERVER,
 	CLIENT,
@@ -45,16 +45,16 @@ const MATERIAL_DATA = {
 		"out": 60,
 		"max_stack": 360,
 	},
-	Type.LOGIC_1: {
-		"name": "ロジック (1)",
+	Type.PROGRAM_1: {
+		"name": "プログラム (1)",
 		"out": 60,
 		"max_stack": 360,
 	},
 	Type.RPG_1: {
 		"name": "RPG ゲーム (1)",
-		"in": [[Type.D2_1, 60], [Type.LOGIC_1, 60]],
+		"in": [[Type.D2_1, 60], [Type.PROGRAM_1, 60]],
 		"out": 60,
-		"max_stack": 3600,
-		"goal": 1200,
+		"max_stack": 360,
+		"goal": 120,
 	},
 }

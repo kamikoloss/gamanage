@@ -45,8 +45,6 @@ const HELP_DESCRIPTIONS_LV1 = {
 	"show": {
 		"emp": "		雇用している従業員の一覧を表示します",
 		"emp <id>": "	雇用している従業員の詳細を表示します",
-		"mat": "		所持している素材の一覧を表示します",
-		"mat <id>": "	所持している素材の詳細を表示します",
 	},
 	"task": {
 		"add <emp-id> <mat-type>": "	従業員の素材生産のタスクを追加します",
@@ -88,6 +86,7 @@ func _ready() -> void:
 
 	# 最初の従業員を追加する
 	var employee = CoreEmployeeBase.new("インディー太郎")
+	employee.task_changed.connect(_on_employee_task_changed)
 	_core.add_employee(employee)
 
 
@@ -100,6 +99,12 @@ func _process(delta: float) -> void:
 	_label_3a.text = "\n".join(label_3a_lines)
 	# 3b: 素材
 	var label_3b_lines = []
+	label_3b_lines.append("Type, 所持/最大, 名前") 
+	for type in _core.unlocked_material_types:
+		var name = CoreMaterial.MATERIAL_DATA[type]["name"]
+		var amount = _core.get_material_amount(type)
+		var max_stack = CoreMaterial.MATERIAL_DATA[type]["max_stack"]
+		label_3b_lines.append("%4s, %4s/%4s, %s" % [type, amount, max_stack, name])
 	_label_3b.text = "\n".join(label_3b_lines)
 
 
@@ -115,12 +120,30 @@ func _input(event: InputEvent) -> void:
 				_exec_command(line)
 				_line_edit.text = ""
 			KEY_UP:
+				if _command_history.is_empty():
+					return
 				_command_history_index = clampi(_command_history_index - 1, 0, _command_history.size() - 1)
 				_line_edit.text = _command_history[_command_history_index]
 			KEY_DOWN:
+				if _command_history.is_empty():
+					return
 				_command_history_index = clampi(_command_history_index + 1, 0, _command_history.size() - 1)
 				_line_edit.text = _command_history[_command_history_index]
 
+
+# -------------------------------- signal --------------------------------
+
+func _on_employee_task_changed(employee: CoreEmployeeBase, task: Array) -> void:
+	var line = ""
+	if task.is_empty():
+		line += "やることがない……"
+	else:
+		var material_name = CoreMaterial.MATERIAL_DATA[task[1]]["name"]
+		line += "%s を作りはじめるぞ！" % material_name
+	_line_log(line, employee.screen_name)
+
+
+# -------------------------------- CLI --------------------------------
 
 # CLI に文字列を表示する
 func _line(line: String, label_id: int = 1, color: LineColor = LineColor.WHITE) -> void:
@@ -188,10 +211,6 @@ func _exec_command(line: String) -> void:
 					if words.size() <= 2:
 						return _show_employees()
 					return _show_employees(int(words[2]))
-				"mat":
-					if words.size() <= 2:
-						return _show_materials()
-					return _show_materials(int(words[2]))
 		"task":
 			if words.size() <= 2:
 				return _help(words)
@@ -205,7 +224,7 @@ func _exec_command(line: String) -> void:
 	_line_main("%s: invalid command!" % line, LineColor.RED)
 
 
-# -------------------------------- help --------------------------------
+# -------------------------------- CLI help --------------------------------
 
 func _help(words: Array[String]) -> void:
 	var help_lines = []
@@ -213,16 +232,14 @@ func _help(words: Array[String]) -> void:
 	if words[0] == "help":
 		var descs = HELP_DESCRIPTIONS_LV0
 		help_lines = descs.keys().map(func(v): return v + descs[v])
-	elif words.size() == 1:
+	else:
 		var descs = HELP_DESCRIPTIONS_LV1[words[0]]
 		help_lines = descs.keys().map(func(v): return "%s %s" % [words[0], v] + descs[v])
-	elif words.size() == 2:
-		pass
 
 	_line_main("\n".join(help_lines), LineColor.YELLOW)
 
 
-# -------------------------------- list --------------------------------
+# -------------------------------- CLI list --------------------------------
 
 func _list_materials(type: int = -1) -> void:
 	# 一覧表示
@@ -254,7 +271,7 @@ func _line_material(type: int) -> void:
 	_line_main(line)
 
 
-# -------------------------------- show --------------------------------
+# -------------------------------- CLI show --------------------------------
 
 func _show_employees(id: int = -1) -> void:
 	# 一覧表示
@@ -293,19 +310,7 @@ func _line_employee_task(employee: CoreEmployeeBase) -> void:
 		_line_main(emoloyee_task_line)
 
 
-func _show_materials(type: int = -1) -> void:
-	# TODO: 一覧表示
-	if type == -1:
-		_line_main("TODO!!", LineColor.MAGENTA)
-		_line_main("ID, 名前, 所持数, 増減")
-		for _type in _core.unlocked_material_types:
-			pass
-	# TODO: 詳細表示
-	else:
-		_line_main("TODO!!", LineColor.MAGENTA)
-
-
-# -------------------------------- task --------------------------------
+# -------------------------------- CLI task --------------------------------
 
 func _task_add(employee_id: int, material_type: int) -> void:
 	var employee = _core.employees[employee_id]
