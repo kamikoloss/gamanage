@@ -36,7 +36,7 @@ const HELP_DESCRIPTIONS_LV0 = {
 }
 const HELP_DESCRIPTIONS_LV1 = {
 	"debug": {
-		"time-scale <x>": "	ゲームの進行速度を変更します",
+		"x <ratio>": "	ゲームの進行速度を変更します",
 	},
 	"list": {
 		"mat": "		マスターデータの素材の一覧を表示します",
@@ -188,7 +188,7 @@ func _exec_command(line: String) -> void:
 			if words.size() <= 1:
 				return _help(words)
 			match words[1]:
-				"time-scale":
+				"x":
 					if words.size() <= 2:
 						return _help(words)
 					_core.time_scale = int(words[2])
