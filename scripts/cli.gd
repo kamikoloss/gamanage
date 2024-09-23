@@ -92,19 +92,35 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	# 3a: ステータス
-	var label_3a_lines = [
+	var label_3a_lines = []
+	label_3a_lines.append("<会社>")
+	label_3a_lines.append_array([
 		"プレイ時間	%s (x%s)" % [_core.uptime_string, _core.time_scale],
 		"会社資金		%s" % [_core.company_money],
-	]
+	])
+	label_3a_lines.append("\n")
+	label_3a_lines.append("<従業員>")
+	label_3a_lines.append("ID, MNTL/COMM/ENGN/ART_/MBTI") 
+	for employee_id in range(_core.employees.size()):
+		var employee: CoreEmployeeBase = _core.employees[employee_id]
+		label_3a_lines.append("%2s, %3s%s/%3s%s/%3s%s/%3s%s/%s" % [
+			employee_id,
+			employee.spec_mental, employee.get_rank_string(employee.spec_mental),
+			employee.spec_communication, employee.get_rank_string(employee.spec_communication),
+			employee.spec_engineering, employee.get_rank_string(employee.spec_engineering),
+			employee.spec_art, employee.get_rank_string(employee.spec_art),
+			employee.mbti_string,
+		])
 	_label_3a.text = "\n".join(label_3a_lines)
 	# 3b: 素材
 	var label_3b_lines = []
-	label_3b_lines.append("Type, 所持/最大, 名前") 
+	label_3b_lines.append("<素材>")
+	label_3b_lines.append("Type, NOW_/MAX_, Name") 
 	for type in _core.unlocked_material_types:
-		var name = CoreMaterial.MATERIAL_DATA[type]["name"]
+		var material_name = CoreMaterial.MATERIAL_DATA[type]["name"]
 		var amount = _core.get_material_amount(type)
 		var max_stack = CoreMaterial.MATERIAL_DATA[type]["max_stack"]
-		label_3b_lines.append("%4s, %4s/%4s, %s" % [type, amount, max_stack, name])
+		label_3b_lines.append("%4s, %4s/%4s, %s" % [type, amount, max_stack, material_name])
 	_label_3b.text = "\n".join(label_3b_lines)
 
 
@@ -113,9 +129,6 @@ func _input(event: InputEvent) -> void:
 		match event.keycode:
 			KEY_ENTER:
 				var line = _line_edit.text
-				if line != "":
-					_command_history.append(line)
-					_command_history_index = _command_history.size()
 				_line_main("$ %s" % [line]) # 打ったコマンド自体を表示する
 				_exec_command(line)
 				_line_edit.text = ""
@@ -139,7 +152,7 @@ func _on_employee_task_changed(employee: CoreEmployeeBase, task: Array) -> void:
 		line += "やることがない……"
 	else:
 		var material_name = CoreMaterial.MATERIAL_DATA[task[1]]["name"]
-		line += "%s を作りはじめるぞ！" % material_name
+		line += "%s を作るぞ！" % material_name
 	_line_log(line, employee.screen_name)
 
 
@@ -180,6 +193,10 @@ func _exec_command(line: String) -> void:
 	# 何もせずに終了する (単なる改行送りになる)
 	if words.size() == 0:
 		return
+
+	# コマンド履歴を追加する
+	_command_history.append(line)
+	_command_history_index = _command_history.size()
 
 	# コマンドを実行する
 	# 有効なコマンドに突き当たったら return する
