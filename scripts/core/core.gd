@@ -20,11 +20,11 @@ var time_scale: int = 1:
 	set(value):
 		_uptime_sec_stack = uptime_sec
 		_wake_up_unixtime = Time.get_unix_time_from_system()
-		time_scale = clamp(value, 1, 10000)
+		time_scale = clampi(value, 1, 10000)
 
 var company_money: int = 1000 # 会社の資金
-var employees: Array[CoreEmployeeBase] = [] # 現在の従業員
-var materials: Dictionary = {} # 現在の所持素材 { CoreMaterial.Type: <amount> }
+var employees: Array[CoreEmployeeBase] = [] # 雇用している従業員
+var materials: Dictionary = {} # 所持している素材 { CoreMaterial.Type: <amount> }
 
 
 var _wake_up_unixtime: int = 0 # 起動開始時刻

@@ -1,4 +1,5 @@
 # CLI でゲームを操作するためのクラス
+# TODO: Core の変数を直接弄っているところにメソッドをかませる
 extends Node
 
 
@@ -48,8 +49,8 @@ const HELP_DESCRIPTIONS_LV1 = {
 		"mat <id>": "	所持している素材の詳細を表示します",
 	},
 	"task": {
-		"add <emp-id> <mat-type>": "	従業員に素材生産のタスクを追加します",
-		"remove <emp-id> <mat-type>": "	従業員に素材生産のタスクを消去します",
+		"add <emp-id> <mat-type>": "	従業員の素材生産のタスクを追加します",
+		"remove <emp-id> <mat-type>": "	従業員の素材生産のタスクを消去します",
 	},
 }
 
@@ -68,6 +69,9 @@ var _version = "v0.0.0"
 var _label_1_lines = []
 var _label_4_lines = []
 
+var _command_history = []
+var _command_history_index = 0
+
 
 func _ready() -> void:
 	_line_edit.grab_focus()
@@ -77,10 +81,10 @@ func _ready() -> void:
 	_line_main("GAMANAGE (CLI Mode) %s" % [_version], LineColor.GRAY)
 	_line_main("\"help\" と入力するとコマンド一覧が表示されます", LineColor.GRAY)
 	_line_main("----------------------------------------------------------------", LineColor.GRAY)
-	_line_main("\n")
 
 	# Log
 	_line_log("ここには行動ログやヒントが表示されます", "System", LineColor.CYAN)
+	_line_log("ヒント: 上下キーで過去のコマンドを再利用できます", "System", LineColor.CYAN)
 
 	# 最初の従業員を追加する
 	var employee = CoreEmployeeBase.new("インディー太郎")
@@ -103,10 +107,19 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.is_pressed():
 		match event.keycode:
 			KEY_ENTER:
-				_line_main("$ " + _line_edit.text) # 打ったコマンド自体を表示する
-				_exec_command(_line_edit.text)
+				var line = _line_edit.text
+				if line != "":
+					_command_history.append(line)
+					_command_history_index = _command_history.size()
+				_line_main("$ %s" % [line]) # 打ったコマンド自体を表示する
+				_exec_command(line)
 				_line_edit.text = ""
-			# TODO: UP キーで履歴出す
+			KEY_UP:
+				_command_history_index = clampi(_command_history_index - 1, 0, _command_history.size() - 1)
+				_line_edit.text = _command_history[_command_history_index]
+			KEY_DOWN:
+				_command_history_index = clampi(_command_history_index + 1, 0, _command_history.size() - 1)
+				_line_edit.text = _command_history[_command_history_index]
 
 
 # CLI に文字列を表示する

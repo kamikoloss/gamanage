@@ -1,5 +1,6 @@
 # 従業員関連のクラス
 # CoreEmployeeBase.new() で生成する
+# TODO: タスクの最大数
 class_name CoreEmployeeBase
 extends Node
 
@@ -94,7 +95,9 @@ func get_rank_string(spec: int) -> String:
 
 
 func add_task_material(material_type: CoreMaterial.Type) -> Array:
-	task_list.append([TaskType.MATERIAL, material_type])
+	var has_same_task = task_list.any(func(v): return v[0] == TaskType.MATERIAL and v[1] == material_type)
+	if not has_same_task:
+		task_list.append([TaskType.MATERIAL, material_type])
 	return task_list
 
 func remove_task_material(material_type: CoreMaterial.Type) -> Array:
