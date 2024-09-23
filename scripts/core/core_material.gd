@@ -30,26 +30,31 @@ enum Type {
 
 # 素材のマスターデータ
 # name: 表示名
-# in: (加工品の場合) 必要材料 [ [ CoreMaterial.Type, <amount> ], ... ]
-# out:
-# goal:
+# in: (加工品の場合のみ) 必要材料 [ [ CoreMaterial.Type, <必要量> ], ... ]
+# out: 産出ペース
+# max_stack: 最大いくつまで貯めておけるかの初期値
+# goal: (ゲームの場合のみ) 完成度が 100% になる基準
 const MATERIAL_DATA = {
 	Type.D2_1: {
 		"name": "2D 素材 (1)",
 		"out": 60,
+		"max_stack": 360,
 	},
 	Type.D3_1: {
 		"name": "3D 素材 (1)",
 		"out": 60,
+		"max_stack": 360,
 	},
 	Type.LOGIC_1: {
 		"name": "ロジック (1)",
 		"out": 60,
+		"max_stack": 360,
 	},
 	Type.RPG_1: {
 		"name": "RPG ゲーム (1)",
 		"in": [[Type.D2_1, 60], [Type.LOGIC_1, 60]],
-		"out": 30,
-		"goal": 120,
+		"out": 60,
+		"max_stack": 3600,
+		"goal": 1200,
 	},
 }

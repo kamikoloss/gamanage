@@ -5,10 +5,11 @@ extends Node
 
 
 enum SpecRank { F, E, D, C, B, A, S, X }
+enum TaskType { MATERIAL }
 
 
 # スペックランクのマスターデータ [ <from>, <to>, SpecRank ]
-const RANK_DATA = [
+const SPEC_RANK_DATA = [
 	[0, 31, SpecRank.F],
 	[32, 63, SpecRank.E],
 	[64, 95, SpecRank.D],
@@ -30,7 +31,7 @@ const MBTI_ROLL_DATA = {
 
 
 var screen_name: String = "" # 表示名
-var cost: int = 60 # 月単価
+var cost: int = 0 # 月単価
 
 # スペック (0-255)
 var spec_mental: int = 100 # 精神力
@@ -53,6 +54,10 @@ var mbti_string: String = "":
 var mbti_roll: String = "":
 	get:
 		return MBTI_ROLL_DATA[mbti_string]
+
+# タスク [ [ TaskType, ResourceID ], ... ]
+var task_list: Array = []
+
 
 var _core: Core
 
@@ -78,9 +83,9 @@ func init_mbti(ei: bool, sn: bool, tf: bool, jp: bool) -> void:
 
 func get_rank(spec: int) -> SpecRank:
 	var rank = SpecRank.F
-	for rank_data in RANK_DATA:
-		if rank_data[0] <= spec and spec <= rank_data[1]:
-			rank = rank_data[2]
+	for data in SPEC_RANK_DATA:
+		if data[0] <= spec and spec <= data[1]:
+			rank = data[2]
 	return rank
 
 func get_rank_string(spec: int) -> String:
@@ -88,6 +93,9 @@ func get_rank_string(spec: int) -> String:
 	return SpecRank.keys()[rank]
 
 
-# 生産/加工 作業を開始する
-func start_work(material_type: CoreMaterial.Type) -> void:
-	pass
+func add_task_material(material_type: CoreMaterial.Type) -> Array:
+	task_list.append([TaskType.MATERIAL, material_type])
+	return task_list
+
+func remove_task_material(material_type: CoreMaterial.Type) -> Array:
+	return []
