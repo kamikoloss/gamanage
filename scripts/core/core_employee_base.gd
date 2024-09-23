@@ -98,4 +98,5 @@ func add_task_material(material_type: CoreMaterial.Type) -> Array:
 	return task_list
 
 func remove_task_material(material_type: CoreMaterial.Type) -> Array:
-	return []
+	task_list = task_list.filter(func(v): return not (v[0] == TaskType.MATERIAL and v[1] == material_type))
+	return task_list

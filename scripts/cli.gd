@@ -30,8 +30,8 @@ const HELP_DESCRIPTIONS_LV0 = {
 	"debug": "	(デバッグ用コマンドの一覧を表示します)",
 	"help": "	すべてのコマンドの一覧を表示します",
 	"list": "	(マスターデータ確認用のコマンドの一覧を表示します)",
-	"set": "	(設定用コマンドの一覧を表示します)",
 	"show": "	(所持リソース確認用コマンドの一覧を表示します)",
+	"task": "	(従業員タスク設定用コマンドの一覧を表示します)",
 }
 const HELP_DESCRIPTIONS_LV1 = {
 	"debug": {
@@ -41,15 +41,15 @@ const HELP_DESCRIPTIONS_LV1 = {
 		"mat": "		マスターデータの素材の一覧を表示します",
 		"mat <type>": "	マスターデータの素材の詳細を表示します",
 	},
-	"set": {
-		"task <emp-id> <mat-type>": "	従業員に素材生産のタスクを設定します",
-		"task <emp-id> <mat-id>": "		従業員にデプロイのタスクを設定します"
-	},
 	"show": {
 		"emp": "		雇用している従業員の一覧を表示します",
 		"emp <id>": "	雇用している従業員の詳細を表示します",
 		"mat": "		所持している素材の一覧を表示します",
 		"mat <id>": "	所持している素材の詳細を表示します",
+	},
+	"task": {
+		"add <emp-id> <mat-type>": "	従業員に素材生産のタスクを追加します",
+		"remove <emp-id> <mat-type>": "	従業員に素材生産のタスクを消去します",
 	},
 }
 
@@ -146,78 +146,50 @@ func _exec_command(line: String) -> void:
 		return
 
 	# コマンドを実行する
-	# 有効なコマンドに突き当たったら is_valid_command を true にする
-	var is_valid_command = false
+	# 有効なコマンドに突き当たったら return する
 	match words[0]:
 		"debug":
 			if words.size() <= 1:
-				is_valid_command = true
-				_help(words)
-			else:
-				match words[1]:
-					"time-scale":
-						if words.size() <= 2:
-							is_valid_command = true
-							_help(words)
-						else:
-							is_valid_command = true
-							_core.time_scale = int(words[2])
+				return _help(words)
+			match words[1]:
+				"time-scale":
+					if words.size() <= 2:
+						return _help(words)
+					_core.time_scale = int(words[2])
+					return
 		"help":
-			is_valid_command = true
-			_help(words)
+			return _help(words)
 		"list":
 			if words.size() <= 1:
-				is_valid_command = true
-				_help(words)
-			else:
-				match words[1]:
-					"mat":
-						if words.size() <= 2:
-							is_valid_command = true
-							_list_materials()
-						else:
-							is_valid_command = true
-							_list_materials(int(words[2]))
-		"set":
-			if words.size() <= 1:
-				is_valid_command = true
-				_help(words)
-			else:
-				match words[1]:
-					"task":
-						if words.size() <= 2:
-							is_valid_command = true
-							_help(words)
-						else:
-							is_valid_command = true
-							_set_task(int(words[2]), int(words[3]))
+				return _help(words)
+			match words[1]:
+				"mat":
+					if words.size() <= 2:
+						return _list_materials()
+					return _list_materials(int(words[2]))
 		"show":
 			if words.size() <= 1:
-				is_valid_command = true
-				_help(words)
-			else:
-				match words[1]:
-					"emp":
-						if words.size() <= 2:
-							is_valid_command = true
-							_show_employees()
-						else:
-							is_valid_command = true
-							_show_employees(int(words[2]))
-					"mat":
-						if words.size() <= 2:
-							is_valid_command = true
-							_show_materials()
-						else:
-							is_valid_command = true
-							_show_materials(int(words[2]))
+				return _help(words)
+			match words[1]:
+				"emp":
+					if words.size() <= 2:
+						return _show_employees()
+					return _show_employees(int(words[2]))
+				"mat":
+					if words.size() <= 2:
+						return _show_materials()
+					return _show_materials(int(words[2]))
+		"task":
+			if words.size() <= 2:
+				return _help(words)
+			match words[1]:
+				"add":
+					return _task_add(int(words[2]), int(words[3]))
+				"remove":
+					return _task_remove(int(words[2]), int(words[3]))
 
 	# コマンドリストにないコマンドが入力されたとき: エラーを表示する
-	if not is_valid_command:
-		_line_main("%s: invalid command!" % line, LineColor.RED)
-
-	# 1行開ける
-	_line_main("\n") 
+	_line_main("%s: invalid command!" % line, LineColor.RED)
 
 
 # -------------------------------- help --------------------------------
@@ -267,13 +239,6 @@ func _line_material(type: int) -> void:
 
 	var line = "%s, %s, %s" % [type, material["name"], how_to_out]
 	_line_main(line)
-
-# -------------------------------- show --------------------------------
-
-func _set_task(employee_id: int, material_type: int) -> void:
-	var employee = _core.employees[employee_id]
-	employee.add_task_material(material_type)
-	_line_employee_task(employee)
 
 
 # -------------------------------- show --------------------------------
@@ -325,3 +290,16 @@ func _show_materials(type: int = -1) -> void:
 	# TODO: 詳細表示
 	else:
 		_line_main("TODO!!", LineColor.MAGENTA)
+
+
+# -------------------------------- task --------------------------------
+
+func _task_add(employee_id: int, material_type: int) -> void:
+	var employee = _core.employees[employee_id]
+	employee.add_task_material(material_type)
+	_line_employee_task(employee)
+
+func _task_remove(employee_id: int, material_type: int) -> void:
+	var employee = _core.employees[employee_id]
+	employee.remove_task_material(material_type)
+	_line_employee_task(employee)
