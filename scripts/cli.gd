@@ -73,14 +73,14 @@ func _ready() -> void:
 	_line_edit.grab_focus()
 
 	# Main
-	_append_line_main("----------------------------------------------------------------", LineColor.GRAY)
-	_append_line_main("GAMANAGE (CLI Mode) %s" % [_version], LineColor.GRAY)
-	_append_line_main("\"help\" と入力するとコマンド一覧が表示されます", LineColor.GRAY)
-	_append_line_main("----------------------------------------------------------------", LineColor.GRAY)
-	_append_line_main("\n")
+	_line_main("----------------------------------------------------------------", LineColor.GRAY)
+	_line_main("GAMANAGE (CLI Mode) %s" % [_version], LineColor.GRAY)
+	_line_main("\"help\" と入力するとコマンド一覧が表示されます", LineColor.GRAY)
+	_line_main("----------------------------------------------------------------", LineColor.GRAY)
+	_line_main("\n")
 
 	# Log
-	_append_line_log("ここには行動ログやヒントが表示されます", "System", LineColor.CYAN)
+	_line_log("ここには行動ログやヒントが表示されます", "System", LineColor.CYAN)
 
 	# 最初の従業員を追加する
 	var employee = CoreEmployeeBase.new("インディー太郎")
@@ -103,13 +103,14 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.is_pressed():
 		match event.keycode:
 			KEY_ENTER:
-				_append_line_main("$ " + _line_edit.text) # 打ったコマンド自体を表示する
+				_line_main("$ " + _line_edit.text) # 打ったコマンド自体を表示する
 				_exec_command(_line_edit.text)
 				_line_edit.text = ""
 			# TODO: UP キーで履歴出す
 
 
-func _append_line(line: String, label_id: int = 1, color: LineColor = LineColor.WHITE) -> void:
+# CLI に文字列を表示する
+func _line(line: String, label_id: int = 1, color: LineColor = LineColor.WHITE) -> void:
 	var color_string = LINE_COLOR_STRING[color]
 	var colored_line = "[color=%s]" % [color_string] + line + "[/color]"
 	match label_id:
@@ -122,15 +123,15 @@ func _append_line(line: String, label_id: int = 1, color: LineColor = LineColor.
 			_label_4.text = "\n".join(_label_4_lines)
 			_label_4.scroll_to_line(9999)
 
-func _append_line_main(line: String, color: LineColor = LineColor.WHITE) -> void:
-	_append_line(line, 1, color)
+func _line_main(line: String, color: LineColor = LineColor.WHITE) -> void:
+	_line(line, 1, color)
 
-func _append_line_log(line: String, name: String, color: LineColor = LineColor.WHITE) -> void:
+func _line_log(line: String, name: String, color: LineColor = LineColor.WHITE) -> void:
 	#var datetime_dict = Time.get_datetime_dict_from_system()
 	#var datetime_string = Time.get_datetime_string_from_datetime_dict(datetime_dict, true)
 	#var line_with_name = "%s [%s] %s" % [datetime_string, name, line]
 	var line_with_name = "[%s] %s" % [name, line]
-	_append_line(line_with_name, 4, color)
+	_line(line_with_name, 4, color)
 
 
 func _exec_command(line: String) -> void:
@@ -213,10 +214,10 @@ func _exec_command(line: String) -> void:
 
 	# コマンドリストにないコマンドが入力されたとき: エラーを表示する
 	if not is_valid_command:
-		_append_line_main("%s: invalid command!" % line, LineColor.RED)
+		_line_main("%s: invalid command!" % line, LineColor.RED)
 
 	# 1行開ける
-	_append_line_main("\n") 
+	_line_main("\n") 
 
 
 # -------------------------------- help --------------------------------
@@ -233,7 +234,7 @@ func _help(words: Array[String]) -> void:
 	elif words.size() == 2:
 		pass
 
-	_append_line_main("\n".join(help_lines), LineColor.YELLOW)
+	_line_main("\n".join(help_lines), LineColor.YELLOW)
 
 
 # -------------------------------- list --------------------------------
@@ -241,15 +242,15 @@ func _help(words: Array[String]) -> void:
 func _list_materials(type: int = -1) -> void:
 	# 一覧表示
 	if type == -1:
-		_append_line_main("Type, 名前, 生産手段 (/min)") 
+		_line_main("Type, 名前, 生産手段 (/min)") 
 		for _type in CoreMaterial.Type.values():
-			_append_line_material(_type)
+			_line_material(_type)
 	# TODO: 詳細表示
 	else:
-		_append_line_main("TODO!!", LineColor.MAGENTA)
+		_line_main("TODO!!", LineColor.MAGENTA)
 		pass
 
-func _append_line_material(type: int) -> void:
+func _line_material(type: int) -> void:
 	var material = CoreMaterial.MATERIAL_DATA[type]
 	var how_to_out = ""
 
@@ -265,14 +266,14 @@ func _append_line_material(type: int) -> void:
 		how_to_out = "従業員 => %s" % [material["out"]]
 
 	var line = "%s, %s, %s" % [type, material["name"], how_to_out]
-	_append_line_main(line)
+	_line_main(line)
 
 # -------------------------------- show --------------------------------
 
 func _set_task(employee_id: int, material_type: int) -> void:
 	var employee = _core.employees[employee_id]
 	employee.add_task_material(material_type)
-	_append_line_employee_task(employee)
+	_line_employee_task(employee)
 
 
 # -------------------------------- show --------------------------------
@@ -280,20 +281,20 @@ func _set_task(employee_id: int, material_type: int) -> void:
 func _show_employees(id: int = -1) -> void:
 	# 一覧表示
 	if id == -1:
-		_append_line_main("ID, 名前, 月単価, 稼働率")
+		_line_main("ID, 名前, 月単価, 稼働率")
 		for _id in range(_core.employees.size()):
 			var employee: CoreEmployeeBase = _core.employees[_id]
 			var employee_line = "%s, %s, %s, %s" % [_id, employee.screen_name, employee.cost, "TODO!!"]
-			_append_line_main(employee_line)
+			_line_main(employee_line)
 	# 詳細表示
 	else:
 		var employee: CoreEmployeeBase = _core.employees[id]
-		_append_line_main("<プロフィール>")
-		_append_line_employee_profile(employee)
-		_append_line_main("<現在設定中のタスク>")
-		_append_line_employee_task(employee)
+		_line_main("<プロフィール>")
+		_line_employee_profile(employee)
+		_line_main("<現在設定中のタスク>")
+		_line_employee_task(employee)
 
-func _append_line_employee_profile(employee: CoreEmployeeBase) -> void:
+func _line_employee_profile(employee: CoreEmployeeBase) -> void:
 	var employee_spec_lines = [
 		"名前			%s" % [employee.screen_name],
 		"性格			%s (%s)" % [employee.mbti_roll, employee.mbti_string],
@@ -303,24 +304,24 @@ func _append_line_employee_profile(employee: CoreEmployeeBase) -> void:
 		"エンジニア力		%s (%03d)" % [employee.get_rank_string(employee.spec_engineering), employee.spec_engineering],
 		"アート力			%s (%03d)" % [employee.get_rank_string(employee.spec_art), employee.spec_art],
 	]
-	_append_line_main("\n".join(employee_spec_lines))
+	_line_main("\n".join(employee_spec_lines))
 
-func _append_line_employee_task(employee: CoreEmployeeBase) -> void:
-	_append_line_main("種類, 対象, 稼働率")
+func _line_employee_task(employee: CoreEmployeeBase) -> void:
+	_line_main("種類, 対象, 稼働率")
 	for task in employee.task_list:
 		var task_type = CoreEmployeeBase.TaskType.keys()[task[0]]
 		var material_type = CoreMaterial.MATERIAL_DATA[task[1]]["name"]
 		var emoloyee_task_line = "%s, %s, %s" % [task_type, material_type, "TODO!!"]
-		_append_line_main(emoloyee_task_line)
+		_line_main(emoloyee_task_line)
 
 
 func _show_materials(type: int = -1) -> void:
 	# TODO: 一覧表示
 	if type == -1:
-		_append_line_main("TODO!!", LineColor.MAGENTA)
-		_append_line_main("ID, 名前, 所持数, 増減")
+		_line_main("TODO!!", LineColor.MAGENTA)
+		_line_main("ID, 名前, 所持数, 増減")
 		for _type in CoreMaterial.Type.values():
 			pass
 	# TODO: 詳細表示
 	else:
-		_append_line_main("TODO!!", LineColor.MAGENTA)
+		_line_main("TODO!!", LineColor.MAGENTA)
