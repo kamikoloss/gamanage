@@ -23,8 +23,11 @@ var time_scale: int = 1:
 		time_scale = clampi(value, 1, 10000)
 
 var company_money: int = 1000 # 会社の資金
+
 var employees: Array[CoreEmployeeBase] = [] # 雇用している従業員
+
 var materials: Dictionary = {} # 所持している素材 { CoreMaterial.Type: <amount> }
+var unlocked_material_types: Array[CoreMaterial.Type] = [] # アンロックされている素材
 
 
 var _wake_up_unixtime: int = 0 # 起動開始時刻
@@ -33,6 +36,14 @@ var _uptime_sec_stack: int = 0 # プレイ速度倍率変更時用のこれま�
 
 func _ready() -> void:
 	_wake_up_unixtime = Time.get_unix_time_from_system()
+
+	# 初期アンロック素材
+	unlocked_material_types = [
+		CoreMaterial.Type.D2_1,
+		CoreMaterial.Type.D3_1,
+		CoreMaterial.Type.LOGIC_1,
+		CoreMaterial.Type.RPG_1,
+	]
 
 
 func add_employee(employee: CoreEmployeeBase) -> void:

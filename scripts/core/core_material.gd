@@ -6,25 +6,25 @@ extends Node
 # 素材の種別
 enum Type {
 	# 素材
-	#PLAN_1,
-	#SPEC_1,
+	PLAN_1,
+	SPEC_1,
 	D2_1, # 2D
 	D3_1, # 3D
-	#MOTION_1,
-	#EFFECT_1,
-	#UI_1,
-	#SE_1,
-	#BGM_1,
-	#VOICE_1,
-	#MUSIC_1,
+	MOTION_1,
+	EFFECT_1,
+	UI_1,
+	SE_1,
+	BGM_1,
+	VOICE_1,
+	MUSIC_1,
 	LOGIC_1,
-	#TEXT_1, TEXT_2,
-	#SERVER,
-	#CLIENT,
+	TEXT_1, TEXT_2,
+	SERVER,
+	CLIENT,
 	# ゲーム
-	RPG_1, #RPG_2,
-	#ACTION_1, ACTION_2,
-	#NOVEL_1, NOVEL_2,
+	RPG_1, RPG_2,
+	ACTION_1, ACTION_2,
+	NOVEL_1, NOVEL_2,
 }
 
 

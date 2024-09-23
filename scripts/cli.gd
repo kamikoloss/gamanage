@@ -228,7 +228,7 @@ func _list_materials(type: int = -1) -> void:
 	# 一覧表示
 	if type == -1:
 		_line_main("Type, 名前, 生産手段 (/min)") 
-		for _type in CoreMaterial.Type.values():
+		for _type in _core.unlocked_material_types:
 			_line_material(_type)
 	# TODO: 詳細表示
 	else:
@@ -298,7 +298,7 @@ func _show_materials(type: int = -1) -> void:
 	if type == -1:
 		_line_main("TODO!!", LineColor.MAGENTA)
 		_line_main("ID, 名前, 所持数, 増減")
-		for _type in CoreMaterial.Type.values():
+		for _type in _core.unlocked_material_types:
 			pass
 	# TODO: 詳細表示
 	else:
