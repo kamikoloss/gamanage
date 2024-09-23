@@ -4,51 +4,36 @@ extends Node
 
 
 enum LineColor {
-	WHITE,
-	GRAY,
-	RED,
-	BLUE,
-	GREEN,
-	YELLOW,
-	MAGENTA,
-	CYAN,
+	WHITE, GRAY,
+	RED, BLUE, GREEN,
+	YELLOW, MAGENTA, CYAN,
 }
 
 
 # https://docs.godotengine.org/ja/4.x/classes/class_color.html#constants
 const LINE_COLOR_STRING = {
-	LineColor.WHITE: "WHITE",
-	LineColor.GRAY: "GRAY",
-	LineColor.RED: "RED",
-	LineColor.BLUE: "BLUE",
-	LineColor.GREEN: "GREEN",
-	LineColor.YELLOW: "YELLOW",
-	LineColor.MAGENTA: "MAGENTA",
-	LineColor.CYAN: "CYAN",
+	LineColor.WHITE: "WHITE", LineColor.GRAY: "GRAY",
+	LineColor.RED: "RED", LineColor.BLUE: "BLUE", LineColor.GREEN: "GREEN",
+	LineColor.YELLOW: "YELLOW", LineColor.MAGENTA: "MAGENTA", LineColor.CYAN: "CYAN",
 }
 
 const HELP_DESCRIPTIONS_LV0 = {
 	"debug": "	(デバッグ用コマンドの一覧を表示します)",
 	"help": "	すべてのコマンドの一覧を表示します",
-	"list": "	(マスターデータ確認用のコマンドの一覧を表示します)",
-	"show": "	(所持リソース確認用コマンドの一覧を表示します)",
+	"show": "	(データ確認用コマンドの一覧を表示します)",
 	"task": "	(従業員タスク設定用コマンドの一覧を表示します)",
 }
 const HELP_DESCRIPTIONS_LV1 = {
 	"debug": {
 		"x <ratio>": "	ゲームの進行速度を変更します",
 	},
-	"list": {
-		"mat": "		マスターデータの素材の一覧を表示します",
-		"mat <type>": "	マスターデータの素材の詳細を表示します",
-	},
 	"show": {
-		"emp": "		雇用している従業員の一覧を表示します",
-		"emp <id>": "	雇用している従業員の詳細を表示します",
+		"emp <no>": "	従業員の詳細を表示します",
+		"mat <id>": "	素材の詳細を表示します",
 	},
 	"task": {
-		"add <emp-id> <mat-type>": "	従業員の素材生産のタスクを追加します",
-		"remove <emp-id> <mat-type>": "	従業員の素材生産のタスクを消去します",
+		"add <emp-no> <mat-id>": "		従業員のタスクを追加します",
+		"remove <emp-no> <mat-id>": "	従業員のタスクを消去します",
 	},
 }
 
@@ -100,27 +85,27 @@ func _process(delta: float) -> void:
 	])
 	label_3a_lines.append("\n")
 	label_3a_lines.append("<従業員>")
-	label_3a_lines.append("ID, MNTL/COMM/ENGN/ART_/MBTI") 
-	for employee_id in range(_core.employees.size()):
-		var employee: CoreEmployeeBase = _core.employees[employee_id]
+	label_3a_lines.append("NO, Mntl/Comm/Engn/Art_/MBTI") 
+	for employee_no in range(_core.employees.size()):
+		var employee: CoreEmployeeBase = _core.employees[employee_no]
 		label_3a_lines.append("%2s, %3s%s/%3s%s/%3s%s/%3s%s/%s" % [
-			employee_id,
-			employee.spec_mental, employee.get_rank_string(employee.spec_mental),
-			employee.spec_communication, employee.get_rank_string(employee.spec_communication),
-			employee.spec_engineering, employee.get_rank_string(employee.spec_engineering),
-			employee.spec_art, employee.get_rank_string(employee.spec_art),
+			employee_no,
+			employee.specs[0], employee.specs_rank_string[0],
+			employee.specs[1], employee.specs_rank_string[1],
+			employee.specs[2], employee.specs_rank_string[2],
+			employee.specs[3], employee.specs_rank_string[3],
 			employee.mbti_string,
 		])
 	_label_3a.text = "\n".join(label_3a_lines)
 	# 3b: 素材
 	var label_3b_lines = []
 	label_3b_lines.append("<素材>")
-	label_3b_lines.append("Type, NOW_/MAX_, Name") 
-	for type in _core.unlocked_material_types:
-		var material_name = CoreMaterial.MATERIAL_DATA[type]["name"]
-		var amount = _core.get_material_amount(type)
-		var max_stack = CoreMaterial.MATERIAL_DATA[type]["max_stack"]
-		label_3b_lines.append("%4s, %4s/%4s, %s" % [type, amount, max_stack, material_name])
+	label_3b_lines.append("ID, Now_/Max_, Name") 
+	for material_type in _core.unlocked_material_types:
+		var amount = _core.get_material_amount(material_type)
+		var max = CoreMaterial.MATERIAL_DATA[material_type]["max"]
+		var material_name = CoreMaterial.MATERIAL_DATA[material_type]["name"]
+		label_3b_lines.append("%2s, %4s/%4s, %s" % [material_type, amount, max, material_name])
 	_label_3b.text = "\n".join(label_3b_lines)
 
 
@@ -149,10 +134,10 @@ func _input(event: InputEvent) -> void:
 func _on_employee_task_changed(employee: CoreEmployeeBase, task: Array) -> void:
 	var line = ""
 	if task.is_empty():
-		line += "やることがない……"
+		line = "やることがない……"
 	else:
 		var material_name = CoreMaterial.MATERIAL_DATA[task[1]]["name"]
-		line += "%s を作るぞ！" % material_name
+		line = "%s を作るぞ！" % material_name
 	_line_log(line, employee.screen_name)
 
 
@@ -212,22 +197,14 @@ func _exec_command(line: String) -> void:
 					return
 		"help":
 			return _help(words)
-		"list":
-			if words.size() <= 1:
-				return _help(words)
-			match words[1]:
-				"mat":
-					if words.size() <= 2:
-						return _list_materials()
-					return _list_materials(int(words[2]))
 		"show":
-			if words.size() <= 1:
+			if words.size() <= 2:
 				return _help(words)
 			match words[1]:
 				"emp":
-					if words.size() <= 2:
-						return _show_employees()
-					return _show_employees(int(words[2]))
+					return _show_employee(int(words[2]))
+				"mat":
+					return _show_material(int(words[2]))
 		"task":
 			if words.size() <= 2:
 				return _help(words)
@@ -244,97 +221,100 @@ func _exec_command(line: String) -> void:
 # -------------------------------- CLI help --------------------------------
 
 func _help(words: Array[String]) -> void:
-	var help_lines = []
+	var lines = []
 
 	if words[0] == "help":
 		var descs = HELP_DESCRIPTIONS_LV0
-		help_lines = descs.keys().map(func(v): return v + descs[v])
+		lines = descs.keys().map(func(v): return v + descs[v])
 	else:
 		var descs = HELP_DESCRIPTIONS_LV1[words[0]]
-		help_lines = descs.keys().map(func(v): return "%s %s" % [words[0], v] + descs[v])
+		lines = descs.keys().map(func(v): return "%s %s" % [words[0], v] + descs[v])
 
-	_line_main("\n".join(help_lines), LineColor.YELLOW)
+	_line_main("\n".join(lines), LineColor.YELLOW)
 
 
-# -------------------------------- CLI list --------------------------------
+# -------------------------------- CLI show --------------------------------
 
-func _list_materials(type: int = -1) -> void:
-	# 一覧表示
-	if type == -1:
-		_line_main("Type, 名前, 生産手段 (/min)") 
-		for _type in _core.unlocked_material_types:
-			_line_material(_type)
-	# TODO: 詳細表示
-	else:
-		_line_main("TODO!!", LineColor.MAGENTA)
-		pass
+func _show_employee(employee_no: int) -> void:
+	if _core.employees.size() - 1 < employee_no:
+		_line_main("employee %s: not found!" % employee_no, LineColor.RED)
+		return
 
-func _line_material(type: int) -> void:
-	var material = CoreMaterial.MATERIAL_DATA[type]
-	var how_to_out = ""
+	var employee: CoreEmployeeBase = _core.employees[employee_no]
+	_line_main("<プロフィール>")
+	_line_employee(employee)
+	_line_main("<現在設定中のタスク>")
+	_line_employee_task(employee)
 
-	# 従業員加工: in + out
+
+func _line_employee(employee: CoreEmployeeBase) -> void:
+	var lines = [
+		"名前			%s" % [employee.screen_name],
+		"性格			%s (%s)" % [employee.mbti_roll, employee.mbti_string],
+		"月単価			%s" % [employee.cost],
+		"精神力			%3s (%s)" % [employee.specs[0], employee.specs_rank_string[0]],
+		"コミュ力			%3s (%s)" % [employee.specs[1], employee.specs_rank_string[1]],
+		"エンジニア力		%3s (%s)" % [employee.specs[2], employee.specs_rank_string[2]],
+		"アート力			%3s (%s)" % [employee.specs[3], employee.specs_rank_string[3]],
+	]
+	_line_main("\n".join(lines))
+
+func _line_employee_task(employee: CoreEmployeeBase) -> void:
+	if employee.task_list.is_empty():
+		_line_main("なし")
+		return
+
+	_line_main("種類, 対象")
+	for task in employee.task_list:
+		var task_type = CoreEmployeeBase.TaskType.keys()[task[0]]
+		var material_type = CoreMaterial.MATERIAL_DATA[task[1]]["name"]
+		var emoloyee_task_line = "%s, %s" % [task_type, material_type]
+		_line_main(emoloyee_task_line)
+
+
+func _show_material(material_type: int) -> void:
+	if not CoreMaterial.MATERIAL_DATA.keys().has(material_type):
+		_line_main("material %s: not found!" % material_type, LineColor.RED)
+		return
+
+	var material = CoreMaterial.MATERIAL_DATA[material_type]
+	_line_material(material)
+
+
+func _line_material(material: Dictionary) -> void:
+	# 加工: in + out
+	var in_out = ""
 	if material.has("in"):
 		var in_materials = material["in"].map(func(v):
 			var material_name = CoreMaterial.MATERIAL_DATA[v[0]]["name"]
 			return "%s x%s" % [material_name, v[1]]
 		)
-		how_to_out = " + ".join(in_materials) + " =従業員=> %s" % [material["out"]]
-	# 従業員生産: out のみ
+		in_out = " + ".join(in_materials) + " =従業員=> %s" % [material["out"]]
+	# 生産: out のみ
 	elif material.has("out"):
-		how_to_out = "従業員 => %s" % [material["out"]]
+		in_out = "従業員 => %s" % [material["out"]]
 
-	var line = "%s, %s, %s" % [type, material["name"], how_to_out]
-	_line_main(line)
+	var goal = "なし"
+	if material.has("goal"):
+		goal = material["goal"]
 
-
-# -------------------------------- CLI show --------------------------------
-
-func _show_employees(id: int = -1) -> void:
-	# 一覧表示
-	if id == -1:
-		_line_main("ID, 名前, 月単価, 稼働率")
-		for _id in range(_core.employees.size()):
-			var employee: CoreEmployeeBase = _core.employees[_id]
-			var employee_line = "%s, %s, %s, %s" % [_id, employee.screen_name, employee.cost, "TODO!!"]
-			_line_main(employee_line)
-	# 詳細表示
-	else:
-		var employee: CoreEmployeeBase = _core.employees[id]
-		_line_main("<プロフィール>")
-		_line_employee_profile(employee)
-		_line_main("<現在設定中のタスク>")
-		_line_employee_task(employee)
-
-func _line_employee_profile(employee: CoreEmployeeBase) -> void:
-	var employee_spec_lines = [
-		"名前			%s" % [employee.screen_name],
-		"性格			%s (%s)" % [employee.mbti_roll, employee.mbti_string],
-		"月単価			%s" % [employee.cost],
-		"精神力			%s (%03d)" % [employee.get_rank_string(employee.spec_mental), employee.spec_mental],
-		"コミュ力			%s (%03d)" % [employee.get_rank_string(employee.spec_communication), employee.spec_communication],
-		"エンジニア力		%s (%03d)" % [employee.get_rank_string(employee.spec_engineering), employee.spec_engineering],
-		"アート力			%s (%03d)" % [employee.get_rank_string(employee.spec_art), employee.spec_art],
+	var lines = [
+		"名前		%s" % [material["name"]],
+		"生産手段		%s" % [in_out],
+		"最大保持数	%s" % [material["max"]],
+		"完成基準		%s" % [goal],
 	]
-	_line_main("\n".join(employee_spec_lines))
-
-func _line_employee_task(employee: CoreEmployeeBase) -> void:
-	_line_main("種類, 対象, 稼働率")
-	for task in employee.task_list:
-		var task_type = CoreEmployeeBase.TaskType.keys()[task[0]]
-		var material_type = CoreMaterial.MATERIAL_DATA[task[1]]["name"]
-		var emoloyee_task_line = "%s, %s, %s" % [task_type, material_type, "TODO!!"]
-		_line_main(emoloyee_task_line)
+	_line_main("\n".join(lines))
 
 
 # -------------------------------- CLI task --------------------------------
 
-func _task_add(employee_id: int, material_type: int) -> void:
-	var employee = _core.employees[employee_id]
+func _task_add(employee_no: int, material_type: int) -> void:
+	var employee = _core.employees[employee_no]
 	employee.add_task_material(material_type)
 	_line_employee_task(employee)
 
-func _task_remove(employee_id: int, material_type: int) -> void:
-	var employee = _core.employees[employee_id]
+func _task_remove(employee_no: int, material_type: int) -> void:
+	var employee = _core.employees[employee_no]
 	employee.remove_task_material(material_type)
 	_line_employee_task(employee)

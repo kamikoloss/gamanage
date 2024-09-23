@@ -5,6 +5,7 @@ class_name CoreEmployeeBase
 extends Node
 
 
+# 進めるタスクが変わったとき (やることがなくなったときも含む)
 signal task_changed
 
 
@@ -37,23 +38,33 @@ const MBTI_ROLL_DATA = {
 var screen_name: String = "" # 表示名
 var cost: int = 0 # 月単価
 
-# スペック (0-255)
-var spec_mental: int = 100 # 精神力
-var spec_communication: int = 100 # コミュ力
-var spec_engineering: int = 100 # エンジニアリング力
-var spec_art: int = 100 # アート力
+# [ 精神力, コミュ力, エンジニアリング力, アート力 ]
+var specs: Array[int] = []:
+	get:
+		return [_spec_mental, _spec_communication, _spec_engineering, _spec_art]
+var specs_rank: Array[SpecRank] = []:
+	get:
+		return [
+			_get_spec_rank(_spec_mental),
+			_get_spec_rank(_spec_communication),
+			_get_spec_rank(_spec_engineering),
+			_get_spec_rank(_spec_art),
+		]
+var specs_rank_string: Array[String] = []:
+	get:
+		return [
+			_get_spec_rank_string(_spec_mental),
+			_get_spec_rank_string(_spec_communication),
+			_get_spec_rank_string(_spec_engineering),
+			_get_spec_rank_string(_spec_art),
+		]
 
-# 性格 (MBTI): true の場合は前者である
-var mbti_ei: bool = true # Extraversion (外向型) vs Intraversion (内向型)
-var mbti_sn: bool = false # Sensing (感覚型) vs iNtuition (直感型)
-var mbti_tf: bool = false # Thinking (思考型) vs Feeling (感情型)
-var mbti_jp: bool = true # Judging (規範型) vs Perceiving (自由型)
 var mbti_string: String = "":
 	get:
-		var ei = "E" if mbti_ei else "I"
-		var sn = "S" if mbti_sn else "N"
-		var tf = "T" if mbti_tf else "F"
-		var jp = "J" if mbti_jp else "P"
+		var ei = "E" if _mbti_ei else "I"
+		var sn = "S" if _mbti_sn else "N"
+		var tf = "T" if _mbti_tf else "F"
+		var jp = "J" if _mbti_jp else "P"
 		return ei + sn + tf + jp
 var mbti_roll: String = "":
 	get:
@@ -65,7 +76,19 @@ var task_list: Array = []
 
 var _core: Core
 
-var _current_task: Array = [] # 現在進めているタスク (task_list のひとつ)
+# ステータス (0-255)
+var _spec_mental: int = 100 # 精神力
+var _spec_communication: int = 100 # コミュ力
+var _spec_engineering: int = 100 # エンジニアリング力
+var _spec_art: int = 100 # アート力
+
+# 性格 (MBTI): true の場合は前者である
+var _mbti_ei: bool = true # Extraversion (外向型) vs Intraversion (内向型)
+var _mbti_sn: bool = false # Sensing (感覚型) vs iNtuition (直感型)
+var _mbti_tf: bool = false # Thinking (思考型) vs Feeling (感情型)
+var _mbti_jp: bool = true # Judging (規範型) vs Perceiving (自由型)
+
+var _current_task: Array = [] # 現在進めているタスク (task_list のうちのひとつ)
 var _current_task_progress: float = 0.0 # 現在のタスクの進捗 (素材1個ごと)
 
 
@@ -81,28 +104,16 @@ func init_core(core: Core) -> void:
 	_core = core
 
 func init_spec(mental: int, communication: int, engineering: int, art: int) -> void:
-	self.spec_mental = mental
-	self.spec_communication = communication
-	self.spec_engineering = engineering
-	self.spec_art = art
+	_spec_mental = mental
+	_spec_communication = communication
+	_spec_engineering = engineering
+	_spec_art = art
 
 func init_mbti(ei: bool, sn: bool, tf: bool, jp: bool) -> void:
-	self.mbti_ei = ei
-	self.mbti_sn = sn
-	self.mbti_tf = tf
-	self.mbti_jp = jp
-
-
-func get_rank(spec: int) -> SpecRank:
-	var rank = SpecRank.F
-	for data in SPEC_RANK_DATA:
-		if data[0] <= spec and spec <= data[1]:
-			rank = data[2]
-	return rank
-
-func get_rank_string(spec: int) -> String:
-	var rank = get_rank(spec)
-	return SpecRank.keys()[rank]
+	_mbti_ei = ei
+	_mbti_sn = sn
+	_mbti_tf = tf
+	_mbti_jp = jp
 
 
 func add_task_material(material_type: CoreMaterial.Type) -> Array:
@@ -118,6 +129,19 @@ func remove_task_material(material_type: CoreMaterial.Type) -> Array:
 	return task_list
 
 
+func _get_spec_rank(spec: int) -> SpecRank:
+	var spec_rank = SpecRank.F
+	for data in SPEC_RANK_DATA:
+		if data[0] <= spec and spec <= data[1]:
+			spec_rank = data[2]
+			break
+	return spec_rank
+
+func _get_spec_rank_string(spec: int) -> String:
+	var spec_rank = _get_spec_rank(spec)
+	return SpecRank.keys()[spec_rank]
+
+
 # タスクリストの中から現在できるタスクを探す
 func _check_task() -> void:
 	# タスクが設定されていない場合: 終了する
@@ -129,10 +153,10 @@ func _check_task() -> void:
 	for task in task_list:
 		var material_type = task[1]
 		var amount = _core.get_material_amount(material_type)
-		var max_stack = CoreMaterial.MATERIAL_DATA[material_type]["max_stack"]
+		var max = CoreMaterial.MATERIAL_DATA[material_type]["max"]
 
 		# 最大数所持していない場合: このタスクを進める
-		if amount < max_stack:
+		if amount < max:
 			var preview_task = _current_task
 			_current_task = task
 			if preview_task.is_empty() or (not preview_task.is_empty() and task[1] != preview_task[1]):
@@ -152,12 +176,12 @@ func _process_task(delta: float) -> void:
 
 	var material_type = _current_task[1]
 	var material_out = CoreMaterial.MATERIAL_DATA[material_type]["out"]
-	var added_progress = material_out * delta * _core.time_scale / 60 # time_scale によっては 2.0 以上になる
-	_current_task_progress += added_progress
+	var progress = material_out * delta * _core.time_scale / 60 # time_scale によっては 2.0 以上になる
+	_current_task_progress += progress
 
 	if 1.0 < _current_task_progress:
 		var new_amount = _core.get_material_amount(material_type) + int(floor(_current_task_progress))
-		var max_stack = CoreMaterial.MATERIAL_DATA[material_type]["max_stack"]
-		_core.material_amounts[material_type] = clampi(new_amount, 1, max_stack)
+		var material_max = CoreMaterial.MATERIAL_DATA[material_type]["max"]
+		_core.material_amounts[material_type] = clampi(new_amount, 1, material_max)
 		_current_task_progress = 0.0
 		_check_task()

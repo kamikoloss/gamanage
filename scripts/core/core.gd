@@ -8,7 +8,7 @@ extends Node
 var uptime_sec: int = 0:
 	get:
 		return _uptime_sec_stack + (Time.get_unix_time_from_system() - _wake_up_unixtime) * time_scale
-# プレイ時間 (HH:MM:SS)
+# プレイ時間 ("HH:MM:SS")
 var uptime_string: String = "":
 	get:
 		var hours = floor(uptime_sec / 3600)
@@ -20,7 +20,7 @@ var time_scale: int = 1:
 	set(value):
 		_uptime_sec_stack = uptime_sec
 		_wake_up_unixtime = Time.get_unix_time_from_system()
-		time_scale = clampi(value, 1, 10000)
+		time_scale = clampi(value, 1, 1000)
 
 var company_money: int = 1000 # 会社の資金
 
