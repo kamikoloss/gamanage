@@ -8,7 +8,7 @@ extends Node
 var uptime_sec: int = 0:
 	get:
 		return _uptime_sec_stack + (Time.get_unix_time_from_system() - _wake_up_unixtime) * time_scale
-# プレイ時間 ("HH:MM:SS")
+# プレイ時間 ("HHHH:MM:SS")
 var uptime_string: String = "":
 	get:
 		var hours = floor(uptime_sec / 3600)
@@ -26,7 +26,6 @@ var company_money: int = 1000 # 会社の資金
 
 var employees: Array[CoreEmployeeBase] = [] # 雇用している従業員
 var material_amounts: Dictionary = {} # 所持している素材 { CoreMaterial.Type: <amount> }
-var unlocked_material_types: Array[CoreMaterial.Type] = [] # アンロックされている素材
 
 
 var _wake_up_unixtime: int = 0 # 起動開始時刻
@@ -50,9 +49,6 @@ func get_material_amount(type: CoreMaterial.Type) -> int:
 		return 0
 
 func unlock_material(type: CoreMaterial.Type) -> void:
-	if unlocked_material_types.has(type):
-		return
-	unlocked_material_types.append(type)
 	material_amounts[type] = 0
 
 

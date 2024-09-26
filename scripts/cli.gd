@@ -101,7 +101,7 @@ func _process(delta: float) -> void:
 	var label_3b_lines = []
 	label_3b_lines.append("<素材>")
 	label_3b_lines.append("ID, Now_/Max_, Name") 
-	for material_type in _core.unlocked_material_types:
+	for material_type in _core.material_amounts.keys():
 		var amount = _core.get_material_amount(material_type)
 		var max = CoreMaterial.MATERIAL_DATA[material_type]["max"]
 		var material_name = CoreMaterial.MATERIAL_DATA[material_type]["name"]

@@ -50,9 +50,10 @@ const MATERIAL_DATA = {
 		"out": 60,
 		"max": 360,
 	},
+	# ゲーム
 	Type.RPG_1: {
 		"name": "RPG ゲーム (1)",
-		"in": [[Type.D2_1, 60], [Type.PROGRAM_1, 60]],
+		"in": [[Type.D2_1, 1], [Type.PROGRAM_1, 1]],
 		"out": 60,
 		"max": 360,
 		"goal": 120,
