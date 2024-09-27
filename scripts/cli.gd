@@ -76,37 +76,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	# 3a: ステータス
-	var label_3a_lines = []
-	label_3a_lines.append("<会社>")
-	label_3a_lines.append_array([
-		"プレイ時間	%s (x%s)" % [_core.uptime_string, _core.time_scale],
-		"会社資金		%s" % [_core.company_money],
-	])
-	label_3a_lines.append("\n")
-	label_3a_lines.append("<従業員>")
-	label_3a_lines.append("NO, Mntl/Comm/Engn/Art_/MBTI") 
-	for employee_no in range(_core.employees.size()):
-		var employee: CoreEmployeeBase = _core.employees[employee_no]
-		label_3a_lines.append("%2s, %3s%s/%3s%s/%3s%s/%3s%s/%s" % [
-			employee_no,
-			employee.specs[0], employee.specs_rank_string[0],
-			employee.specs[1], employee.specs_rank_string[1],
-			employee.specs[2], employee.specs_rank_string[2],
-			employee.specs[3], employee.specs_rank_string[3],
-			employee.mbti_string,
-		])
-	_label_3a.text = "\n".join(label_3a_lines)
-	# 3b: 素材
-	var label_3b_lines = []
-	label_3b_lines.append("<素材>")
-	label_3b_lines.append("ID, Now_/Max_, Name") 
-	for material_type in _core.material_amounts.keys():
-		var amount = _core.get_material_amount(material_type)
-		var max = CoreMaterial.MATERIAL_DATA[material_type]["max"]
-		var material_name = CoreMaterial.MATERIAL_DATA[material_type]["name"]
-		label_3b_lines.append("%2s, %4s/%4s, %s" % [material_type, amount, max, material_name])
-	_label_3b.text = "\n".join(label_3b_lines)
+	_process_refresh_label_3()
 
 
 func _input(event: InputEvent) -> void:
@@ -139,6 +109,43 @@ func _on_employee_task_changed(employee: CoreEmployeeBase, task: Array) -> void:
 		var material_name = CoreMaterial.MATERIAL_DATA[task[1]]["name"]
 		line = "%s を作るぞ！" % material_name
 	_line_log(line, employee.screen_name)
+
+
+# -------------------------------- Game --------------------------------
+
+func _process_refresh_label_3() -> void:
+	# 3a: ステータス
+	var label_3a_lines = []
+	label_3a_lines.append("<会社>")
+	label_3a_lines.append_array([
+		"プレイ時間	%s (x%s)" % [_core.uptime_string, _core.time_scale],
+		"会社資金		%s" % [_core.company_money],
+	])
+	label_3a_lines.append("\n")
+	label_3a_lines.append("<従業員>")
+	label_3a_lines.append("NO, Mntl/Comm/Engn/Art_/MBTI") 
+	for employee_no in range(_core.employees.size()):
+		var employee: CoreEmployeeBase = _core.employees[employee_no]
+		label_3a_lines.append("%2s, %3s%s/%3s%s/%3s%s/%3s%s/%s" % [
+			employee_no,
+			employee.specs[0], employee.specs_rank_string[0],
+			employee.specs[1], employee.specs_rank_string[1],
+			employee.specs[2], employee.specs_rank_string[2],
+			employee.specs[3], employee.specs_rank_string[3],
+			employee.mbti_string,
+		])
+	_label_3a.text = "\n".join(label_3a_lines)
+
+	# 3b: 素材
+	var label_3b_lines = []
+	label_3b_lines.append("<素材>")
+	label_3b_lines.append("ID, Now_/Max_, Name") 
+	for material_type in _core.material_amounts.keys():
+		var amount = _core.get_material_amount(material_type)
+		var max = CoreMaterial.MATERIAL_DATA[material_type]["max"]
+		var material_name = CoreMaterial.MATERIAL_DATA[material_type]["name"]
+		label_3b_lines.append("%2s, %4s/%4s, %s" % [material_type, amount, max, material_name])
+	_label_3b.text = "\n".join(label_3b_lines)
 
 
 # -------------------------------- CLI --------------------------------
@@ -218,7 +225,7 @@ func _exec_command(line: String) -> void:
 	_line_main("%s: invalid command!" % line, LineColor.RED)
 
 
-# -------------------------------- CLI help --------------------------------
+# ---------------- CLI help ----------------
 
 func _help(words: Array[String]) -> void:
 	var lines = []
@@ -233,7 +240,7 @@ func _help(words: Array[String]) -> void:
 	_line_main("\n".join(lines), LineColor.YELLOW)
 
 
-# -------------------------------- CLI show --------------------------------
+# ---------------- CLI show ----------------
 
 func _show_employee(employee_no: int) -> void:
 	if _core.employees.size() - 1 < employee_no:
@@ -307,7 +314,7 @@ func _line_material(material: Dictionary) -> void:
 	_line_main("\n".join(lines))
 
 
-# -------------------------------- CLI task --------------------------------
+# ---------------- CLI task ----------------
 
 func _task_add(employee_no: int, material_type: int) -> void:
 	var employee = _core.employees[employee_no]
