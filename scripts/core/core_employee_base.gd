@@ -13,7 +13,7 @@ enum SpecRank { F, E, D, C, B, A, S, X }
 enum TaskType { MATERIAL }
 
 
-# スペックランクのマスターデータ [ <from>, <to>, SpecRank ]
+# スペックランクの範囲データ [ <from>, <to>, SpecRank ]
 const SPEC_RANK_DATA = [
 	[0, 31, SpecRank.F],
 	[32, 63, SpecRank.E],
@@ -72,6 +72,8 @@ var mbti_roll: String = "":
 
 # タスクリスト [ [ TaskType, <ResourceID> ], ... ]
 var task_list: Array = []
+# タスクリストの最大の長さ
+var task_list_max = 3
 
 
 var _core: Core
@@ -96,20 +98,17 @@ func _init(screen_name: String) -> void:
 	self.screen_name = screen_name
 
 
-func _process(delta: float) -> void:
-	_process_task(delta)
-
-
 func init_core(core: Core) -> void:
 	_core = core
 
-func init_spec(mental: int, communication: int, engineering: int, art: int) -> void:
+
+func set_spec(mental: int, communication: int, engineering: int, art: int) -> void:
 	_spec_mental = mental
 	_spec_communication = communication
 	_spec_engineering = engineering
 	_spec_art = art
 
-func init_mbti(ei: bool, sn: bool, tf: bool, jp: bool) -> void:
+func set_mbti(ei: bool, sn: bool, tf: bool, jp: bool) -> void:
 	_mbti_ei = ei
 	_mbti_sn = sn
 	_mbti_tf = tf
@@ -170,6 +169,8 @@ func _check_task() -> void:
 		task_changed.emit(self, _current_task)
 
 
+# TODO: tween
+# TODO: 加工
 func _process_task(delta: float) -> void:
 	if _current_task.is_empty():
 		return
