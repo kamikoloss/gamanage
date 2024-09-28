@@ -1,7 +1,7 @@
-# 従業員関連のクラス
-# 個別の従業員は CoreEmployeeBase.new() で生成する
+# 従業員を表現するクラス
+# 新しい従業員は EmployeeBase.new() で生成する
 # TODO: タスクの最大数 (強化できてもいいかも)
-class_name CoreEmployeeBase
+class_name EmployeeBase
 extends Node
 
 
@@ -76,8 +76,6 @@ var task_list: Array = []
 var task_list_max = 3
 
 
-var _core: Core
-
 # ステータス (0-255)
 var _spec_mental: int = 100 # 精神力
 var _spec_communication: int = 100 # コミュ力
@@ -90,16 +88,13 @@ var _mbti_sn: bool = false # Sensing (感覚型) vs iNtuition (直感型)
 var _mbti_tf: bool = false # Thinking (思考型) vs Feeling (感情型)
 var _mbti_jp: bool = true # Judging (規範型) vs Perceiving (自由型)
 
+var _last_worked_time: float = 0.0 # 最後に働いた時間 (Unixtime)
 var _current_task: Array = [] # 現在進めているタスク (task_list のうちのひとつ)
 var _current_task_progress: float = 0.0 # 現在のタスクの進捗 (素材1個ごと)
 
 
 func _init(screen_name: String) -> void:
 	self.screen_name = screen_name
-
-
-func init_core(core: Core) -> void:
-	_core = core
 
 
 func set_spec(mental: int, communication: int, engineering: int, art: int) -> void:
@@ -115,17 +110,38 @@ func set_mbti(ei: bool, sn: bool, tf: bool, jp: bool) -> void:
 	_mbti_jp = jp
 
 
-func add_task_material(material_type: CoreMaterial.Type) -> Array:
+func add_task_material(material_type: MaterialData.Type) -> Array:
 	var has_same_task = task_list.any(func(v): return v[0] == TaskType.MATERIAL and v[1] == material_type)
 	if not has_same_task:
 		task_list.append([TaskType.MATERIAL, material_type])
 	_check_task()
 	return task_list
 
-func remove_task_material(material_type: CoreMaterial.Type) -> Array:
+func remove_task_material(material_type: MaterialData.Type) -> Array:
 	task_list = task_list.filter(func(v): return not (v[0] == TaskType.MATERIAL and v[1] == material_type))
 	_check_task()
 	return task_list
+
+
+# 割り当てられているタスクを進める
+# 一定時間ごとに呼ばれる前提
+func work() -> void:
+	var delta = Time.get_unix_time_from_system() - _last_worked_time
+	_last_worked_time = Time.get_unix_time_from_system()
+
+	if _current_task.is_empty():
+		return
+
+	var material_type = _current_task[1]
+	var material = MaterialManager.get_material_data(material_type)
+	var progress = material_out * delta * GameManager.time_scale / 60 # time_scale によっては 2.0 以上になる
+	_current_task_progress += progress
+
+	# 進捗が 1.0 を超えている場合
+	if 1.0 < _current_task_progress:
+		MaterialManager.increment_amount(material_type, int(floor(_current_task_progress)))
+		_current_task_progress = 0.0
+		_check_task()
 
 
 func _get_spec_rank(spec: int) -> SpecRank:
@@ -151,11 +167,11 @@ func _check_task() -> void:
 	var is_found_task = false
 	for task in task_list:
 		var material_type = task[1]
-		var amount = _core.get_material_amount(material_type)
-		var max = CoreMaterial.MATERIAL_DATA[material_type]["max"]
+		var material = MaterialManager.get_material_data(material_type)
+		var amount = MaterialManager.get_material_amount(material_type)
 
 		# 最大数所持していない場合: このタスクを進める
-		if amount < max:
+		if amount < material.max_amount:
 			var preview_task = _current_task
 			_current_task = task
 			if preview_task.is_empty() or (not preview_task.is_empty() and task[1] != preview_task[1]):
@@ -167,22 +183,3 @@ func _check_task() -> void:
 	if not is_found_task and not _current_task.is_empty():
 		_current_task = []
 		task_changed.emit(self, _current_task)
-
-
-# TODO: tween
-# TODO: 加工
-func _process_task(delta: float) -> void:
-	if _current_task.is_empty():
-		return
-
-	var material_type = _current_task[1]
-	var material_out = CoreMaterial.MATERIAL_DATA[material_type]["out"]
-	var progress = material_out * delta * _core.time_scale / 60 # time_scale によっては 2.0 以上になる
-	_current_task_progress += progress
-
-	if 1.0 < _current_task_progress:
-		var new_amount = _core.get_material_amount(material_type) + int(floor(_current_task_progress))
-		var material_max = CoreMaterial.MATERIAL_DATA[material_type]["max"]
-		_core.material_amounts[material_type] = clampi(new_amount, 1, material_max)
-		_current_task_progress = 0.0
-		_check_task()

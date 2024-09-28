@@ -38,8 +38,6 @@ const HELP_DESCRIPTIONS_LV1 = {
 }
 
 
-@export var _core: Core
-
 @export var _line_edit: LineEdit
 @export var _label_1: RichTextLabel
 #@export var _label_2: RichTextLabel
@@ -70,9 +68,9 @@ func _ready() -> void:
 	_line_log("ヒント: 上下キーで過去のコマンドを再利用できます", "System", LineColor.CYAN)
 
 	# 最初の従業員を追加する
-	var employee = CoreEmployeeBase.new("インディー太郎")
+	var employee = EmployeeBase.new("インディー太郎")
 	employee.task_changed.connect(_on_employee_task_changed)
-	_core.add_employee(employee)
+	EmployeeManager.add_employee(employee)
 
 
 func _process(delta: float) -> void:
@@ -101,12 +99,13 @@ func _input(event: InputEvent) -> void:
 
 # -------------------------------- signal --------------------------------
 
-func _on_employee_task_changed(employee: CoreEmployeeBase, task: Array) -> void:
+func _on_employee_task_changed(employee: EmployeeBase, task: Array) -> void:
 	var line = ""
 	if task.is_empty():
 		line = "やることがない……"
 	else:
-		var material_name = CoreMaterial.MATERIAL_DATA[task[1]]["name"]
+		var material_type = task[1]
+		var material_name = MaterialData.DATA[material_type]["name"]
 		line = "%s を作るぞ！" % material_name
 	_line_log(line, employee.screen_name)
 
@@ -118,14 +117,14 @@ func _process_refresh_label_3() -> void:
 	var label_3a_lines = []
 	label_3a_lines.append("<会社>")
 	label_3a_lines.append_array([
-		"プレイ時間	%s (x%s)" % [_core.uptime_string, _core.time_scale],
-		"会社資金		%s" % [_core.company_money],
+		"プレイ時間	%s (x%s)" % [GameManager.uptime_string, GameManager.time_scale],
+		"会社資金		%s" % [GameManager.company_money],
 	])
 	label_3a_lines.append("\n")
 	label_3a_lines.append("<従業員>")
-	label_3a_lines.append("NO, Mntl/Comm/Engn/Art_/MBTI") 
-	for employee_no in range(_core.employees.size()):
-		var employee: CoreEmployeeBase = _core.employees[employee_no]
+	label_3a_lines.append("NO, Mntl/Comm/Engn/Art_/MBTI")
+	var employee_no = 0
+	for employee in EmployeeManager.get_employees():
 		label_3a_lines.append("%2s, %3s%s/%3s%s/%3s%s/%3s%s/%s" % [
 			employee_no,
 			employee.specs[0], employee.specs_rank_string[0],
@@ -134,17 +133,16 @@ func _process_refresh_label_3() -> void:
 			employee.specs[3], employee.specs_rank_string[3],
 			employee.mbti_string,
 		])
+		employee_no += 1
 	_label_3a.text = "\n".join(label_3a_lines)
 
 	# 3b: 素材
 	var label_3b_lines = []
 	label_3b_lines.append("<素材>")
 	label_3b_lines.append("ID, Now_/Max_, Name") 
-	for material_type in _core.material_amounts.keys():
-		var amount = _core.get_material_amount(material_type)
-		var max = CoreMaterial.MATERIAL_DATA[material_type]["max"]
-		var material_name = CoreMaterial.MATERIAL_DATA[material_type]["name"]
-		label_3b_lines.append("%2s, %4s/%4s, %s" % [material_type, amount, max, material_name])
+	for material in MaterialManager.unlocked_materials:
+		var amount = MaterialManager.get_material_amount(material.type)
+		label_3b_lines.append("%2s, %4s/%4s, %s" % [material.type, amount, material.max_amount, material.screen_name])
 	_label_3b.text = "\n".join(label_3b_lines)
 
 
@@ -200,7 +198,7 @@ func _exec_command(line: String) -> void:
 				"x":
 					if words.size() <= 2:
 						return _help(words)
-					_core.time_scale = int(words[2])
+					GameManager.time_scale = int(words[2])
 					return
 		"help":
 			return _help(words)
@@ -243,18 +241,22 @@ func _help(words: Array[String]) -> void:
 # ---------------- CLI show ----------------
 
 func _show_employee(employee_no: int) -> void:
-	if _core.employees.size() - 1 < employee_no:
+	var employee = EmployeeManager.get_employee(employee_no)
+
+	if employee == null:
 		_line_main("employee %s: not found!" % employee_no, LineColor.RED)
 		return
 
-	var employee: CoreEmployeeBase = _core.employees[employee_no]
 	_line_main("<プロフィール>")
 	_line_employee(employee)
 	_line_main("<現在設定中のタスク>")
 	_line_employee_task(employee)
 
 
-func _line_employee(employee: CoreEmployeeBase) -> void:
+func _line_employee(employee: EmployeeBase) -> void:
+	if employee == null:
+		return
+
 	var lines = [
 		"名前			%s" % [employee.screen_name],
 		"性格			%s (%s)" % [employee.mbti_roll, employee.mbti_string],
@@ -266,15 +268,15 @@ func _line_employee(employee: CoreEmployeeBase) -> void:
 	]
 	_line_main("\n".join(lines))
 
-func _line_employee_task(employee: CoreEmployeeBase) -> void:
+func _line_employee_task(employee: EmployeeBase) -> void:
 	if employee.task_list.is_empty():
 		_line_main("なし")
 		return
 
 	_line_main("種類, 対象")
 	for task in employee.task_list:
-		var task_type = CoreEmployeeBase.TaskType.keys()[task[0]]
-		var material_type = CoreMaterial.MATERIAL_DATA[task[1]]["name"]
+		var task_type = EmployeeBase.TaskType.keys()[task[0]]
+		var material = MaterialManager.get_material_data(task[1])
 		var emoloyee_task_line = "%s, %s" % [task_type, material_type]
 		_line_main(emoloyee_task_line)
 
@@ -317,11 +319,9 @@ func _line_material(material: Dictionary) -> void:
 # ---------------- CLI task ----------------
 
 func _task_add(employee_no: int, material_type: int) -> void:
-	var employee = _core.employees[employee_no]
-	employee.add_task_material(material_type)
-	_line_employee_task(employee)
+	EmployeeManager.add_task_material(employee_no, material_type)
+	_line_employee_task(EmployeeManager.get_employee(employee_no))
 
 func _task_remove(employee_no: int, material_type: int) -> void:
-	var employee = _core.employees[employee_no]
-	employee.remove_task_material(material_type)
-	_line_employee_task(employee)
+	EmployeeManager.remove_task_material(employee_no, material_type)
+	_line_employee_task(EmployeeManager.get_employee(employee_no))
