@@ -3,7 +3,8 @@ extends Node
 
 
 var _employees: Array[EmployeeBase] = [] # 雇用している従業員
-var _employees_watch_interval: float = 0.1
+var _watch_interval: float = 0.1
+var _last_id = 0 # 最後に雇用した従業員の ID
 
 
 func _ready() -> void:
@@ -21,26 +22,22 @@ func get_employees() -> Array[EmployeeBase]:
 
 
 func add_employee(employee: EmployeeBase) -> void:
+	_last_id += 1
+	employee.id = _last_id
 	_employees.append(employee)
 
 
-func add_task_material(no: int, material_type: MaterialData.Type) -> void:
-	var employee = get_employee(no)
-	if employee == null:
-		return
-	employee.add_task_material(material_type)
+func add_task(employee: EmployeeBase, material: MaterialBase) -> void:
+	employee.add_task(material)
 
-func remove_task_material(no: int, material_type: MaterialData.Type) -> void:
-	var employee = get_employee(no)
-	if employee == null:
-		return
-	employee.remove_task_material(material_type)
+func remove_task(employee: EmployeeBase, material: MaterialBase) -> void:
+	employee.remove_task(material)
 
 
 func _start_watch_employees() -> void:
 	var task_tween = create_tween()
 	task_tween.set_loops()
-	task_tween.tween_interval(0.1)
+	task_tween.tween_interval(_watch_interval)
 	task_tween.tween_callback(_watch_employees)
 
 func _watch_employees() -> void:

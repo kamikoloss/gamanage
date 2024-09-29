@@ -35,6 +35,7 @@ const MBTI_ROLL_DATA = {
 }
 
 
+var id: int = 0
 var screen_name: String = "" # 表示名
 var cost: int = 0 # 月単価
 
@@ -70,10 +71,9 @@ var mbti_roll: String = "":
 	get:
 		return MBTI_ROLL_DATA[mbti_string]
 
-# タスクリスト [ [ TaskType, <ResourceID> ], ... ]
-var task_list: Array = []
-# タスクリストの最大の長さ
-var task_list_max = 3
+var is_working: bool = false:
+	get:
+		return _current_task != null
 
 
 # ステータス (0-255)
@@ -88,9 +88,12 @@ var _mbti_sn: bool = false # Sensing (感覚型) vs iNtuition (直感型)
 var _mbti_tf: bool = false # Thinking (思考型) vs Feeling (感情型)
 var _mbti_jp: bool = true # Judging (規範型) vs Perceiving (自由型)
 
+# タスク関連
 var _last_worked_time: float = 0.0 # 最後に働いた時間 (Unixtime)
-var _current_task: Array = [] # 現在進めているタスク (task_list のうちのひとつ)
-var _current_task_progress: float = 0.0 # 現在のタスクの進捗 (素材1個ごと)
+var _task_list: Array[MaterialBase] = [] # タスクリスト
+var _task_list_max_length = 3 # タスクリストの最大の長さ
+var _current_task: MaterialBase = null # 現在進めているタスク
+var _current_task_progress: float = 0.0 # 現在のタスクの進捗 (生産素材1個 = 1.0)
 
 
 func _init(screen_name: String) -> void:
@@ -110,17 +113,16 @@ func set_mbti(ei: bool, sn: bool, tf: bool, jp: bool) -> void:
 	_mbti_jp = jp
 
 
-func add_task_material(material_type: MaterialData.Type) -> Array:
-	var has_same_task = task_list.any(func(v): return v[0] == TaskType.MATERIAL and v[1] == material_type)
-	if not has_same_task:
-		task_list.append([TaskType.MATERIAL, material_type])
+func add_task(material: MaterialBase) -> Array:
+	if not _task_list.any(func(v): return v.id == material.id):
+		_task_list.append(material)
 	_check_task()
-	return task_list
+	return _task_list
 
-func remove_task_material(material_type: MaterialData.Type) -> Array:
-	task_list = task_list.filter(func(v): return not (v[0] == TaskType.MATERIAL and v[1] == material_type))
+func remove_task(material: MaterialBase) -> Array:
+	_task_list = _task_list.filter(func(v): return v.id != material.id)
 	_check_task()
-	return task_list
+	return _task_list
 
 
 # 割り当てられているタスクを進める
@@ -129,17 +131,16 @@ func work() -> void:
 	var delta = Time.get_unix_time_from_system() - _last_worked_time
 	_last_worked_time = Time.get_unix_time_from_system()
 
-	if _current_task.is_empty():
+	if _current_task == null:
 		return
 
-	var material_type = _current_task[1]
-	var material = MaterialManager.get_material_data(material_type)
-	var progress = material_out * delta * GameManager.time_scale / 60 # time_scale によっては 2.0 以上になる
+	# NOTE: progress は time_scale によっては 2.0 を上回ることがある
+	var progress = _current_task.output * delta * GameManager.time_scale / 60
 	_current_task_progress += progress
 
 	# 進捗が 1.0 を超えている場合
 	if 1.0 < _current_task_progress:
-		MaterialManager.increment_amount(material_type, int(floor(_current_task_progress)))
+		MaterialManager.increment_amount(_current_task.type, int(floor(_current_task_progress)))
 		_current_task_progress = 0.0
 		_check_task()
 
@@ -160,26 +161,24 @@ func _get_spec_rank_string(spec: int) -> String:
 # タスクリストの中から現在できるタスクを探す
 func _check_task() -> void:
 	# タスクが設定されていない場合: 終了する
-	if task_list.is_empty():
+	if _task_list.is_empty():
 		return
 	# TODO: 会社資金が足りない場合は作業を止める
 
 	var is_found_task = false
-	for task in task_list:
-		var material_type = task[1]
-		var material = MaterialManager.get_material_data(material_type)
-		var amount = MaterialManager.get_material_amount(material_type)
+	for material in _task_list:
+		var amount = MaterialManager.get_material_amount(material.type)
 
 		# 最大数所持していない場合: このタスクを進める
 		if amount < material.max_amount:
 			var preview_task = _current_task
-			_current_task = task
-			if preview_task.is_empty() or (not preview_task.is_empty() and task[1] != preview_task[1]):
+			_current_task = material
+			if preview_task.type != material.type:
 				task_changed.emit(self, _current_task)
 			is_found_task = true
 			break
 
-	# できるタスクがない場合
-	if not is_found_task and not _current_task.is_empty():
-		_current_task = []
+	# できるタスクがなくなった場合
+	if not is_found_task and _current_task != null:
+		_current_task = null
 		task_changed.emit(self, _current_task)

@@ -1,5 +1,4 @@
 # CLI でゲームを操作するためのクラス
-# TODO: Core の変数を直接弄っているところにメソッドをかませる
 extends Node
 
 
@@ -32,8 +31,8 @@ const HELP_DESCRIPTIONS_LV1 = {
 		"mat <id>": "	素材の詳細を表示します",
 	},
 	"task": {
-		"add <emp-no> <mat-id>": "		従業員のタスクを追加します",
-		"remove <emp-no> <mat-id>": "	従業員のタスクを消去します",
+		"add <emp-id> <mat-id>": "		従業員のタスクを追加します",
+		"remove <emp-id> <mat-id>": "	従業員のタスクを消去します",
 	},
 }
 
@@ -62,7 +61,6 @@ func _ready() -> void:
 	_line_main("GAMANAGE (CLI Mode) %s" % [_version], LineColor.GRAY)
 	_line_main("\"help\" と入力するとコマンド一覧が表示されます", LineColor.GRAY)
 	_line_main("----------------------------------------------------------------", LineColor.GRAY)
-
 	# Log
 	_line_log("ここには行動ログやヒントが表示されます", "System", LineColor.CYAN)
 	_line_log("ヒント: 上下キーで過去のコマンドを再利用できます", "System", LineColor.CYAN)
@@ -81,9 +79,8 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.is_pressed():
 		match event.keycode:
 			KEY_ENTER:
-				var line = _line_edit.text
-				_line_main("$ %s" % [line]) # 打ったコマンド自体を表示する
-				_exec_command(line)
+				_line_main("$ %s" % [_line_edit.text]) # 打ったコマンド自体を表示する
+				_exec_command(_line_edit.text)
 				_line_edit.text = ""
 			KEY_UP:
 				if _command_history.is_empty():
@@ -99,21 +96,19 @@ func _input(event: InputEvent) -> void:
 
 # -------------------------------- signal --------------------------------
 
-func _on_employee_task_changed(employee: EmployeeBase, task: Array) -> void:
+func _on_employee_task_changed(employee: EmployeeBase, material: MaterialBase) -> void:
 	var line = ""
-	if task.is_empty():
-		line = "やることがない……"
+	if employee.has_to_do:
+		line = "%s を作るぞ！" % material.screen_name
 	else:
-		var material_type = task[1]
-		var material_name = MaterialData.DATA[material_type]["name"]
-		line = "%s を作るぞ！" % material_name
+		line = "やることがない……"
 	_line_log(line, employee.screen_name)
 
 
-# -------------------------------- Game --------------------------------
+# -------------------------------- Label --------------------------------
 
 func _process_refresh_label_3() -> void:
-	# 3a: ステータス
+	# 3a
 	var label_3a_lines = []
 	label_3a_lines.append("<会社>")
 	label_3a_lines.append_array([
@@ -121,6 +116,7 @@ func _process_refresh_label_3() -> void:
 		"会社資金		%s" % [GameManager.company_money],
 	])
 	label_3a_lines.append("\n")
+
 	label_3a_lines.append("<従業員>")
 	label_3a_lines.append("NO, Mntl/Comm/Engn/Art_/MBTI")
 	var employee_no = 0
@@ -136,7 +132,7 @@ func _process_refresh_label_3() -> void:
 		employee_no += 1
 	_label_3a.text = "\n".join(label_3a_lines)
 
-	# 3b: 素材
+	# 3b
 	var label_3b_lines = []
 	label_3b_lines.append("<素材>")
 	label_3b_lines.append("ID, Now_/Max_, Name") 
@@ -269,12 +265,12 @@ func _line_employee(employee: EmployeeBase) -> void:
 	_line_main("\n".join(lines))
 
 func _line_employee_task(employee: EmployeeBase) -> void:
-	if employee.task_list.is_empty():
+	if employee._task_list.is_empty():
 		_line_main("なし")
 		return
 
 	_line_main("種類, 対象")
-	for task in employee.task_list:
+	for task in employee._task_list:
 		var task_type = EmployeeBase.TaskType.keys()[task[0]]
 		var material = MaterialManager.get_material_data(task[1])
 		var emoloyee_task_line = "%s, %s" % [task_type, material_type]
