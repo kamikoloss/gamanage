@@ -17,22 +17,27 @@ const LINE_COLOR_STRING = {
 }
 
 const HELP_DESCRIPTIONS_LV0 = {
-	"debug": "	(デバッグ用コマンドの一覧を表示します)",
-	"help": "	すべてのコマンドの一覧を表示します",
-	"show": "	(データ確認用コマンドの一覧を表示します)",
-	"task": "	(従業員タスク設定用コマンドの一覧を表示します)",
+				#
+	"debug":    "	(デバッグ用のコマンドの一覧を表示します)",
+	"emp":    "		(従業員系のコマンドの一覧を表示します)",
+	"help":    "	すべてのコマンドの一覧を表示します",
+	"mat":    "		(素材系のコマンドの一覧を表示します)",
+	"task":    "	(タスク設定用のコマンドの一覧を表示します)",
 }
 const HELP_DESCRIPTIONS_LV1 = {
 	"debug": {
 		"x <ratio>": "	ゲームの進行速度を変更します",
 	},
-	"show": {
-		"emp <no>": "	従業員の詳細を表示します",
-		"mat <id>": "	素材の詳細を表示します",
+	"emp": {
+		"show <emp-id>": "	従業員の詳細を表示します",
 	},
 	"task": {
+									#
 		"add <emp-id> <mat-id>": "		従業員のタスクを追加します",
 		"remove <emp-id> <mat-id>": "	従業員のタスクを消去します",
+	},
+	"mat": {
+		"show <mat-id>": "	素材の詳細を表示します",
 	},
 }
 
@@ -96,7 +101,7 @@ func _input(event: InputEvent) -> void:
 
 # -------------------------------- signal --------------------------------
 
-func _on_employee_task_changed(employee: EmployeeBase, material: MaterialBase) -> void:
+func _on_employee_task_changed(employee: EmployeeBase, material: MaterialData) -> void:
 	var line = ""
 	if employee.has_to_do:
 		line = "%s を作るぞ！" % material.screen_name
@@ -112,31 +117,28 @@ func _process_refresh_label_3() -> void:
 	var label_3a_lines = []
 	label_3a_lines.append("<会社>")
 	label_3a_lines.append_array([
-		"プレイ時間	%s (x%s)" % [GameManager.uptime_string, GameManager.time_scale],
-		"会社資金		%s" % [GameManager.company_money],
+		"プレイ時間   	%s (x%s)" % [GameManager.uptime_string, GameManager.time_scale],
+		"会社資金   		%s" % [GameManager.company_money],
 	])
 	label_3a_lines.append("\n")
 
 	label_3a_lines.append("<従業員>")
-	label_3a_lines.append("NO, Mntl/Comm/Engn/Art_/MBTI")
-	var employee_no = 0
+	label_3a_lines.append("ID, Mntl/Comm/Engn/Art_")
 	for employee in EmployeeManager.get_employees():
-		label_3a_lines.append("%2s, %3s%s/%3s%s/%3s%s/%3s%s/%s" % [
-			employee_no,
+		label_3a_lines.append("%2s, %3s%s/%3s%s/%3s%s/%3s%s" % [
+			employee.id,
 			employee.specs[0], employee.specs_rank_string[0],
 			employee.specs[1], employee.specs_rank_string[1],
 			employee.specs[2], employee.specs_rank_string[2],
 			employee.specs[3], employee.specs_rank_string[3],
-			employee.mbti_string,
 		])
-		employee_no += 1
 	_label_3a.text = "\n".join(label_3a_lines)
 
 	# 3b
 	var label_3b_lines = []
 	label_3b_lines.append("<素材>")
 	label_3b_lines.append("ID, Now_/Max_, Name") 
-	for material in MaterialManager.unlocked_materials:
+	for material in MaterialManager.get_unlocked_materials().values():
 		var amount = MaterialManager.get_material_amount(material.type)
 		label_3b_lines.append("%2s, %4s/%4s, %s" % [material.type, amount, material.max_amount, material.screen_name])
 	_label_3b.text = "\n".join(label_3b_lines)
@@ -196,15 +198,23 @@ func _exec_command(line: String) -> void:
 						return _help(words)
 					GameManager.time_scale = int(words[2])
 					return
-		"help":
-			return _help(words)
-		"show":
-			if words.size() <= 2:
+		"emp":
+			if words.size() <= 1:
 				return _help(words)
 			match words[1]:
-				"emp":
+				"show":
+					if words.size() <= 2:
+						return _help(words)
 					return _show_employee(int(words[2]))
-				"mat":
+		"help":
+			return _help(words)
+		"mat":
+			if words.size() <= 1:
+				return _help(words)
+			match words[1]:
+				"show":
+					if words.size() <= 2:
+						return _help(words)
 					return _show_material(int(words[2]))
 		"task":
 			if words.size() <= 2:
@@ -254,13 +264,13 @@ func _line_employee(employee: EmployeeBase) -> void:
 		return
 
 	var lines = [
-		"名前			%s" % [employee.screen_name],
-		"性格			%s (%s)" % [employee.mbti_roll, employee.mbti_string],
-		"月単価			%s" % [employee.cost],
-		"精神力			%3s (%s)" % [employee.specs[0], employee.specs_rank_string[0]],
-		"コミュ力			%3s (%s)" % [employee.specs[1], employee.specs_rank_string[1]],
-		"エンジニア力		%3s (%s)" % [employee.specs[2], employee.specs_rank_string[2]],
-		"アート力			%3s (%s)" % [employee.specs[3], employee.specs_rank_string[3]],
+		"名前   			%s" % [employee.screen_name],
+		"性格   			%s (%s)" % [employee.mbti_roll, employee.mbti_string],
+		"月単価   		%s" % [employee.cost],
+		"精神力   		%3s (%s)" % [employee.specs[0], employee.specs_rank_string[0]],
+		"コミュ力   		%3s (%s)" % [employee.specs[1], employee.specs_rank_string[1]],
+		"エンジニア力   	%3s (%s)" % [employee.specs[2], employee.specs_rank_string[2]],
+		"アート力   		%3s (%s)" % [employee.specs[3], employee.specs_rank_string[3]],
 	]
 	_line_main("\n".join(lines))
 
@@ -269,45 +279,37 @@ func _line_employee_task(employee: EmployeeBase) -> void:
 		_line_main("なし")
 		return
 
-	_line_main("種類, 対象")
+	_line_main("生産素材")
 	for task in employee._task_list:
-		var task_type = EmployeeBase.TaskType.keys()[task[0]]
-		var material = MaterialManager.get_material_data(task[1])
-		var emoloyee_task_line = "%s, %s" % [task_type, material_type]
+		var emoloyee_task_line = "%s, %s" % [task.screen_name]
 		_line_main(emoloyee_task_line)
 
 
 func _show_material(material_type: int) -> void:
-	if not CoreMaterial.MATERIAL_DATA.keys().has(material_type):
+	var material = MaterialManager.get_material_data(material_type)
+	if material == null:
 		_line_main("material %s: not found!" % material_type, LineColor.RED)
-		return
-
-	var material = CoreMaterial.MATERIAL_DATA[material_type]
-	_line_material(material)
+	else:
+		_line_material(material)
 
 
-func _line_material(material: Dictionary) -> void:
-	# 加工: in + out
+func _line_material(material: MaterialData) -> void:
 	var in_out = ""
-	if material.has("in"):
-		var in_materials = material["in"].map(func(v):
-			var material_name = CoreMaterial.MATERIAL_DATA[v[0]]["name"]
-			return "%s x%s" % [material_name, v[1]]
-		)
-		in_out = " + ".join(in_materials) + " =従業員=> %s" % [material["out"]]
-	# 生産: out のみ
-	elif material.has("out"):
-		in_out = "従業員 => %s" % [material["out"]]
+	if material.input.is_empty():
+		var inputs = material.input.map(func(v): return "%s x%s" % [v[0].screen_name, v[1]])
+		in_out = " + ".join(inputs) + " =従業員=> %s" % [material.output]
+	else:
+		in_out = "従業員 => %s" % [material.output]
 
 	var goal = "なし"
-	if material.has("goal"):
-		goal = material["goal"]
+	if 0 < material.goal_base_amount:
+		goal = material.goal_base_amount
 
 	var lines = [
-		"名前		%s" % [material["name"]],
-		"生産手段		%s" % [in_out],
-		"最大保持数	%s" % [material["max"]],
-		"完成基準		%s" % [goal],
+		"名前   			%s" % [material.screen_name],
+		"生産手段   		%s" % [in_out],
+		"最大保持数   	%s" % [material.max_amout],
+		"完成基準   		%s" % [goal],
 	]
 	_line_main("\n".join(lines))
 

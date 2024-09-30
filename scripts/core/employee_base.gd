@@ -1,8 +1,7 @@
 # 従業員を表現するクラス
-# 新しい従業員は EmployeeBase.new() で生成する
 # TODO: タスクの最大数 (強化できてもいいかも)
 class_name EmployeeBase
-extends Node
+extends Object
 
 
 # 進めるタスクが変わったとき (やることがなくなったときも含む)
@@ -36,14 +35,14 @@ const MBTI_ROLL_DATA = {
 
 
 var id: int = 0
-var screen_name: String = "" # 表示名
+var screen_name: String = ""
 var cost: int = 0 # 月単価
 
 # [ 精神力, コミュ力, エンジニアリング力, アート力 ]
-var specs: Array[int] = []:
+var specs: Array[int]:
 	get:
 		return [_spec_mental, _spec_communication, _spec_engineering, _spec_art]
-var specs_rank: Array[SpecRank] = []:
+var specs_rank: Array[SpecRank]:
 	get:
 		return [
 			_get_spec_rank(_spec_mental),
@@ -51,7 +50,7 @@ var specs_rank: Array[SpecRank] = []:
 			_get_spec_rank(_spec_engineering),
 			_get_spec_rank(_spec_art),
 		]
-var specs_rank_string: Array[String] = []:
+var specs_rank_string: Array[String]:
 	get:
 		return [
 			_get_spec_rank_string(_spec_mental),
@@ -60,18 +59,18 @@ var specs_rank_string: Array[String] = []:
 			_get_spec_rank_string(_spec_art),
 		]
 
-var mbti_string: String = "":
+var mbti_string: String:
 	get:
 		var ei = "E" if _mbti_ei else "I"
 		var sn = "S" if _mbti_sn else "N"
 		var tf = "T" if _mbti_tf else "F"
 		var jp = "J" if _mbti_jp else "P"
 		return ei + sn + tf + jp
-var mbti_roll: String = "":
+var mbti_roll: String:
 	get:
 		return MBTI_ROLL_DATA[mbti_string]
 
-var is_working: bool = false:
+var is_working: bool:
 	get:
 		return _current_task != null
 
@@ -89,10 +88,11 @@ var _mbti_tf: bool = false # Thinking (思考型) vs Feeling (感情型)
 var _mbti_jp: bool = true # Judging (規範型) vs Perceiving (自由型)
 
 # タスク関連
+# TODO: 生産 (MaterialData) 以外のタスク
 var _last_worked_time: float = 0.0 # 最後に働いた時間 (Unixtime)
-var _task_list: Array[MaterialBase] = [] # タスクリスト
+var _task_list: Array[MaterialData] = [] # タスクリスト
 var _task_list_max_length = 3 # タスクリストの最大の長さ
-var _current_task: MaterialBase = null # 現在進めているタスク
+var _current_task: MaterialData = null # 現在進めているタスク
 var _current_task_progress: float = 0.0 # 現在のタスクの進捗 (生産素材1個 = 1.0)
 
 
@@ -113,13 +113,13 @@ func set_mbti(ei: bool, sn: bool, tf: bool, jp: bool) -> void:
 	_mbti_jp = jp
 
 
-func add_task(material: MaterialBase) -> Array:
+func add_task(material: MaterialData) -> Array:
 	if not _task_list.any(func(v): return v.id == material.id):
 		_task_list.append(material)
 	_check_task()
 	return _task_list
 
-func remove_task(material: MaterialBase) -> Array:
+func remove_task(material: MaterialData) -> Array:
 	_task_list = _task_list.filter(func(v): return v.id != material.id)
 	_check_task()
 	return _task_list

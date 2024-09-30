@@ -2,8 +2,8 @@
 extends Node
 
 
-var _employees: Array[EmployeeBase] = [] # 雇用している従業員
-var _watch_interval: float = 0.1
+var _employees: Array[EmployeeBase] = [] # 雇用している従業員のリスト
+var _watch_interval: float = 0.1 # 従業員を監視する周期 (秒)
 var _last_id = 0 # 最後に雇用した従業員の ID
 
 
@@ -27,10 +27,10 @@ func add_employee(employee: EmployeeBase) -> void:
 	_employees.append(employee)
 
 
-func add_task(employee: EmployeeBase, material: MaterialBase) -> void:
+func add_task(employee: EmployeeBase, material: MaterialData) -> void:
 	employee.add_task(material)
 
-func remove_task(employee: EmployeeBase, material: MaterialBase) -> void:
+func remove_task(employee: EmployeeBase, material: MaterialData) -> void:
 	employee.remove_task(material)
 
 
