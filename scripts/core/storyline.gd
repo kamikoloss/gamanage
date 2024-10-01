@@ -1,4 +1,4 @@
-# ゲームの進行を管理するクラス
+# アンロックなどゲームの流れを管理するクラス
 class_name Storyline
 extends Node
 
@@ -10,6 +10,7 @@ func _ready() -> void:
 	MaterialManager.unlock_material(MaterialData.MaterialType.D2_1)
 	MaterialManager.unlock_material(MaterialData.MaterialType.D3_1)
 	MaterialManager.unlock_material(MaterialData.MaterialType.PROGRAM_1)
+	MaterialManager.unlock_material(MaterialData.MaterialType.ACTION_1)
 	MaterialManager.unlock_material(MaterialData.MaterialType.RPG_1)
 
 	# 初期従業員を追加する

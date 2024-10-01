@@ -205,12 +205,16 @@ func _exec_command(line: String) -> void:
 						return _help(words)
 					return _show_material(int(words[2]))
 		"task":
-			if words.size() <= 3:
+			if words.size() <= 1:
 				return _help(words)
 			match words[1]:
 				"add":
+					if words.size() <= 3:
+						return _help(words)
 					return _task_add(int(words[2]), int(words[3]))
 				"remove":
+					if words.size() <= 3:
+						return _help(words)
 					return _task_remove(int(words[2]), int(words[3]))
 
 	# コマンドリストにないコマンドが入力されたとき: エラーを表示する
@@ -234,12 +238,10 @@ func _help(words: Array[String]) -> void:
 
 # ---------------- CLI show ----------------
 
-func _show_employee(employee_no: int) -> void:
-	var employee = EmployeeManager.get_employee(employee_no)
-
+func _show_employee(employee_id: int) -> void:
+	var employee = EmployeeManager.get_employee(employee_id)
 	if employee == null:
-		line_main("employee %s: not found!" % employee_no, LineColor.RED)
-		return
+		return line_main("employee %s: not found!" % employee_id, LineColor.RED)
 
 	line_main("<プロフィール>")
 	_line_employee(employee)
@@ -248,9 +250,6 @@ func _show_employee(employee_no: int) -> void:
 
 
 func _line_employee(employee: EmployeeBase) -> void:
-	if employee == null:
-		return
-
 	var lines = [
 		"名前   			%s" % [employee.screen_name],
 		"性格   			%s (%s)" % [employee.mbti_roll, employee.mbti_string],
@@ -263,22 +262,22 @@ func _line_employee(employee: EmployeeBase) -> void:
 	line_main("\n".join(lines))
 
 func _line_employee_task(employee: EmployeeBase) -> void:
-	if not employee.is_working:
-		line_main("なし")
+	if not employee.has_task:
+		line_main("現在設定中のタスクなし")
 		return
 
 	line_main("ID, 生産素材")
-	for task in employee.get_tasks():
-		var line = "%2s, %s" % [task.type, task.screen_name]
+	for task_material: MaterialData in employee.get_tasks():
+		var line = "%2s, %s" % [task_material.type, task_material.screen_name]
 		line_main(line)
 
 
 func _show_material(material_type: int) -> void:
 	var material = MaterialManager.get_material(material_type)
 	if material == null:
-		line_main("material %s: not found!" % material_type, LineColor.RED)
-	else:
-		_line_material(material)
+		return line_main("material %s: not found!" % material_type, LineColor.RED)
+
+	_line_material(material)
 
 
 func _line_material(material: MaterialData) -> void:
@@ -286,7 +285,10 @@ func _line_material(material: MaterialData) -> void:
 	if material.input.is_empty():
 		in_out = "従業員 => %s" % [material.output]
 	else:
-		var inputs = material.input.map(func(v): return "%s x%s" % [v[0].screen_name, v[1]])
+		var inputs = material.input.map(func(v):
+			var input_material = MaterialManager.get_material(v[0])
+			return "%s x%s" % [input_material.screen_name, v[1]]
+		)
 		in_out = " + ".join(inputs) + " =従業員=> %s" % [material.output]
 
 	var goal = "なし"
@@ -305,9 +307,24 @@ func _line_material(material: MaterialData) -> void:
 # ---------------- CLI task ----------------
 
 func _task_add(employee_id: int, material_type: int) -> void:
+	var employee = EmployeeManager.get_employee(employee_id)
+	if employee == null:
+		return line_main("employee %s: not found!" % employee_id, LineColor.RED)
+	var material = MaterialManager.get_material(material_type)
+	if material == null:
+		return line_main("material %s: not found!" % material_type, LineColor.RED)
+
 	EmployeeManager.add_task(employee_id, material_type)
-	_line_employee_task(EmployeeManager.get_employee(employee_id))
+	_line_employee_task(employee)
+
 
 func _task_remove(employee_id: int, material_type: int) -> void:
+	var employee = EmployeeManager.get_employee(employee_id)
+	if employee == null:
+		return line_main("employee %s: not found!" % employee_id, LineColor.RED)
+	var material = MaterialManager.get_material(material_type)
+	if material == null:
+		return line_main("material %s: not found!" % material_type, LineColor.RED)
+
 	EmployeeManager.remove_task(employee_id, material_type)
-	_line_employee_task(EmployeeManager.get_employee(employee_id))
+	_line_employee_task(employee)

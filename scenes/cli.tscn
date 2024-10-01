@@ -23,38 +23,48 @@ theme = ExtResource("2_y108q")
 [node name="RichTextLabel" type="RichTextLabel" parent="CanvasLayer"]
 offset_right = 640.0
 offset_bottom = 680.0
+focus_mode = 2
 theme = ExtResource("2_y108q")
 bbcode_enabled = true
+selection_enabled = true
 
 [node name="RichTextLabel2" type="RichTextLabel" parent="CanvasLayer"]
 visible = false
 offset_top = 360.0
 offset_right = 640.0
 offset_bottom = 680.0
+focus_mode = 2
 theme = ExtResource("2_y108q")
 bbcode_enabled = true
+selection_enabled = true
 
 [node name="RichTextLabel3a" type="RichTextLabel" parent="CanvasLayer"]
 offset_left = 640.0
 offset_right = 960.0
 offset_bottom = 360.0
+focus_mode = 2
 theme = ExtResource("2_y108q")
 bbcode_enabled = true
+selection_enabled = true
 
 [node name="RichTextLabel3b" type="RichTextLabel" parent="CanvasLayer"]
 offset_left = 960.0
 offset_right = 1280.0
 offset_bottom = 360.0
+focus_mode = 2
 theme = ExtResource("2_y108q")
 bbcode_enabled = true
+selection_enabled = true
 
 [node name="RichTextLabel4" type="RichTextLabel" parent="CanvasLayer"]
 offset_left = 640.0
 offset_top = 360.0
 offset_right = 1280.0
 offset_bottom = 720.0
+focus_mode = 2
 theme = ExtResource("2_y108q")
 bbcode_enabled = true
+selection_enabled = true
 
 [node name="Storyline" type="Node" parent="." node_paths=PackedStringArray("_cli")]
 script = ExtResource("3_8ax88")

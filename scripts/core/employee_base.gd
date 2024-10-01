@@ -70,6 +70,9 @@ var mbti_roll: String:
 	get:
 		return MBTI_ROLL_DATA[mbti_string]
 
+var has_task: bool:
+	get:
+		return not _task_list.is_empty()
 var is_working: bool:
 	get:
 		return _current_task != null
@@ -169,19 +172,33 @@ func _check_task() -> void:
 	# TODO: 会社資金が足りない場合は作業を止める
 
 	var is_found_task = false
-	for material: MaterialData in _task_list:
-		# 最大数所持していない場合: このタスクを進める
-		var amount = MaterialManager.get_material_amount(material.type)
-		if amount < material.max_amount:
-			var preview_task = _current_task
-			_current_task = material
-			is_found_task = true
-			if preview_task == null or preview_task.type != _current_task.type:
-				task_changed.emit(self, _current_task)
-			break
+	for task_material: MaterialData in _task_list:
+		# 最大数所持している場合: 次のタスクを見る
+		var amount = MaterialManager.get_material_amount(task_material.type)
+		if task_material.max_amount <= amount:
+			continue
+		# 消費素材が足りない場合: 次のタスクを見る
+		# 消費素材が設定されていない場合は for が回らないので false にならない
+		var has_input = true
+		for input in task_material.input:
+			var input_material = input[0]
+			var input_amount = input[1]
+			var required_amount = int(floor(input_amount / task_material.output))
+			if amount < required_amount:
+				has_input = false
+		if not has_input:
+			continue
 
-	# できるタスクが見つからなかった場合 かつ 何かタスクを進めていた場合: signal を発火する
-	# null から null への以降を除く
+		# やることが見つかった場合: タスクを見るのをやめる
+		is_found_task = true
+		var preview_task = _current_task
+		_current_task = task_material
+		# 見つかったタスクが前と違う場合: signal を発火する
+		if preview_task == null or preview_task.type != _current_task.type:
+			task_changed.emit(self, _current_task)
+		break
+
+	# やれるタスクがなくなった場合: signal を発火する
 	if not is_found_task and _current_task != null:
 		_current_task = null
 		task_changed.emit(self, _current_task)

@@ -29,15 +29,11 @@ func add_employee(employee: EmployeeBase) -> void:
 func add_task(employee_id: int, material_type: int) -> void:
 	var employee = get_employee(employee_id)
 	var material = MaterialManager.get_material(material_type)
-	if employee == null or material == null:
-		return
 	employee.add_task(material)
 
 func remove_task(employee_id: int, material_type: int) -> void:
 	var employee = get_employee(employee_id)
 	var material = MaterialManager.get_material(material_type)
-	if employee == null or material == null:
-		return
 	employee.remove_task(material)
 
 

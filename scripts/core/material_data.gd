@@ -29,14 +29,18 @@ enum MaterialType {
 }
 
 
+#
 var type: MaterialType
-var alias_type: MaterialType # 生産素材をこれと同じ扱いにする (代替レシピ用)
+# 生産素材をこれと同じ扱いにする (代替レシピ用)
+var alias_type: MaterialType
+#
 var screen_name: String = ""
-var max_amount: int = 0 # 最大いくつまで保持できるかの初期値
-var goal_base_amount: int = -1 # (ゲームの場合のみ) 完成度が 100% になる基準
-
+# 最大いくつまで保持できるかの初期値
+var max_amount: int = 0
+# (ゲームの場合のみ) 完成度が 100% になる基準
+var goal_base_amount: int = -1
 # [ [ MaterialType, <1分あたりの消費量> ], ... ]
-# 労働力によって生産される場合は空とする
+# 労働力によって生産される場合は空配列とする
 var input = []
 # 1分あたりの生産量
-var output = 60
+var output = 0
