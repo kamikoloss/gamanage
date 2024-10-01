@@ -12,22 +12,18 @@ const MATERIAL_DATA = {
 }
 
 
-# アンロックされている素材のリスト
-# { MaterialType: MaterialData }
-var _unlocked_materials: Dictionary = {}
-
-# 素材の所持数
-# { MaterialType: <amount> }
-# TODO: ストレージ概念
-# TODO: スタック概念
-var _material_amounts: Dictionary = {}
+var _unlocked_materials: Dictionary = {} # アンロックされている素材のリスト { MaterialType: MaterialData }
+var _material_amounts: Dictionary = {} # 素材の所持数 { MaterialType: <amount> }
 
 
-func get_material_data(type: MaterialData.MaterialType) -> MaterialData:
+func get_material(type: MaterialData.MaterialType) -> MaterialData:
 	if _unlocked_materials.keys().has(type):
 		return _unlocked_materials[type]
 	else:
 		return null
+
+func get_materials() -> Array:
+	return _unlocked_materials.values()
 
 
 func get_material_amount(type: MaterialData.MaterialType) -> int:
@@ -37,7 +33,7 @@ func get_material_amount(type: MaterialData.MaterialType) -> int:
 		return -1
 
 func set_material_amount(type: MaterialData.MaterialType, amount: int) -> int:
-	var material = get_material_amount(type)
+	var material = get_material(type)
 	_material_amounts[type] = clampi(amount, 0, material.max_amount)
 	return get_material_amount(type)
 
@@ -45,9 +41,6 @@ func increment_amount(type: MaterialData.MaterialType, amount: int) -> int:
 	set_material_amount(type, get_material_amount(type) + amount)
 	return get_material_amount(type)
 
-
-func get_unlocked_materials() -> Dictionary:
-	return _unlocked_materials
 
 func unlock_material(type: MaterialData.MaterialType) -> void:
 	var data = MATERIAL_DATA[type]

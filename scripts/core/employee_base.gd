@@ -113,14 +113,17 @@ func set_mbti(ei: bool, sn: bool, tf: bool, jp: bool) -> void:
 	_mbti_jp = jp
 
 
+func get_tasks() -> Array:
+	return _task_list
+
 func add_task(material: MaterialData) -> Array:
-	if not _task_list.any(func(v): return v.id == material.id):
+	if not _task_list.any(func(v): return v.type == material.type):
 		_task_list.append(material)
 	_check_task()
 	return _task_list
 
 func remove_task(material: MaterialData) -> Array:
-	_task_list = _task_list.filter(func(v): return v.id != material.id)
+	_task_list = _task_list.filter(func(v): return v.type != material.type)
 	_check_task()
 	return _task_list
 
@@ -166,19 +169,19 @@ func _check_task() -> void:
 	# TODO: 会社資金が足りない場合は作業を止める
 
 	var is_found_task = false
-	for material in _task_list:
-		var amount = MaterialManager.get_material_amount(material.type)
-
+	for material: MaterialData in _task_list:
 		# 最大数所持していない場合: このタスクを進める
+		var amount = MaterialManager.get_material_amount(material.type)
 		if amount < material.max_amount:
 			var preview_task = _current_task
 			_current_task = material
-			if preview_task.type != material.type:
-				task_changed.emit(self, _current_task)
 			is_found_task = true
+			if preview_task == null or preview_task.type != _current_task.type:
+				task_changed.emit(self, _current_task)
 			break
 
-	# できるタスクがなくなった場合
+	# できるタスクが見つからなかった場合 かつ 何かタスクを進めていた場合: signal を発火する
+	# null から null への以降を除く
 	if not is_found_task and _current_task != null:
 		_current_task = null
 		task_changed.emit(self, _current_task)

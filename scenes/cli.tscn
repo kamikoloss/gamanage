@@ -56,5 +56,6 @@ offset_bottom = 720.0
 theme = ExtResource("2_y108q")
 bbcode_enabled = true
 
-[node name="Storyline" type="Node" parent="."]
+[node name="Storyline" type="Node" parent="." node_paths=PackedStringArray("_cli")]
 script = ExtResource("3_8ax88")
+_cli = NodePath("..")
