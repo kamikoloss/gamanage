@@ -6,6 +6,9 @@ extends Node
 
 
 func _ready() -> void:
+	# signal
+	EmployeeManager.employee_task_changed.connect(_on_employee_task_changed)
+
 	# 初期素材をアンロックする
 	MaterialManager.unlock_material(MaterialData.MaterialType.D2_1)
 	MaterialManager.unlock_material(MaterialData.MaterialType.D3_1)
@@ -15,7 +18,6 @@ func _ready() -> void:
 
 	# 初期従業員を追加する
 	var employee = EmployeeBase.new("インディー太郎")
-	employee.task_changed.connect(_on_employee_task_changed)
 	EmployeeManager.add_employee(employee)
 
 	# CLI

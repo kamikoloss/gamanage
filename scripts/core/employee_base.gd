@@ -5,7 +5,7 @@ extends Object
 
 
 # 進めるタスクが変わったとき (やることがなくなったときも含む)
-signal task_changed
+signal task_changed # (EmployeeBase, MaterialData)
 
 
 enum SpecRank { F, E, D, C, B, A, S, X }
@@ -91,7 +91,7 @@ var _mbti_tf: bool = false # Thinking (思考型) vs Feeling (感情型)
 var _mbti_jp: bool = true # Judging (規範型) vs Perceiving (自由型)
 
 # タスク関連
-# TODO: 生産 (MaterialData) 以外のタスク
+# TODO: MaterialData 以外のタスク
 var _last_worked_time: float = 0.0 # 最後に働いた時間 (Unixtime)
 var _task_list: Array[MaterialData] = [] # タスクリスト
 var _task_list_max_length = 3 # タスクリストの最大の長さ
