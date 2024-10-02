@@ -3,12 +3,16 @@ class_name CLI
 extends Node
 
 
+# ================================ 06. enums ================================
+
 enum LineColor {
 	WHITE, GRAY,
 	RED, BLUE, GREEN,
 	YELLOW, MAGENTA, CYAN,
 }
 
+
+# ================================ 07. constants ================================
 
 # https://docs.godotengine.org/ja/4.x/classes/class_color.html#constants
 const LINE_COLOR_STRING = {
@@ -42,6 +46,7 @@ const HELP_DESCRIPTIONS_LV1 = {
 	},
 }
 
+# ================================ 08. @export variables ================================
 
 @export var _line_edit: LineEdit
 @export var _label_1: RichTextLabel
@@ -51,16 +56,22 @@ const HELP_DESCRIPTIONS_LV1 = {
 @export var _label_4: RichTextLabel
 
 
+# ================================ 10. private variables ================================
+
 var _label_1_lines = []
 var _label_4_lines = []
 
 var _command_history = []
 var _command_history_index = 0
 
+ 
+# ================================ 14. built-in virtual _ready method ================================
 
 func _ready() -> void:
 	_line_edit.grab_focus()
 
+
+# ================================ 15. remaining built-in virtual methods ================================
 
 func _process(delta: float) -> void:
 	_process_refresh_label_3()
@@ -84,6 +95,21 @@ func _input(event: InputEvent) -> void:
 				_command_history_index = clampi(_command_history_index + 1, 0, _command_history.size() - 1)
 				_line_edit.text = _command_history[_command_history_index]
 
+
+# ================================ 16. public Methods ================================
+
+func line_main(line: String, color: LineColor = LineColor.WHITE) -> void:
+	_line(line, 1, color)
+
+func line_log(line: String, name: String, color: LineColor = LineColor.WHITE) -> void:
+	var line_with_name = "[%s] %s" % [name, line]
+	_line(line_with_name, 4, color)
+
+func line_log_system(line: String) -> void:
+	line_log(line, "System", LineColor.CYAN)
+
+
+# ================================ 17. private methods ================================
 
 # -------------------------------- Label --------------------------------
 
@@ -117,22 +143,16 @@ func _process_refresh_label_3() -> void:
 	label_3b_lines.append("ID, Now_/Max_, Name") 
 	for material: MaterialData in MaterialManager.get_materials():
 		var amount = MaterialManager.get_material_amount(material.type)
-		label_3b_lines.append("%2s, %4s/%4s, %s" % [material.type, amount, material.max_amount, material.screen_name])
+		label_3b_lines.append("%2s, %4s/%4s, %s" % [
+			material.type,
+			amount,
+			material.max_amount,
+			material.screen_name
+		])
 	_label_3b.text = "\n".join(label_3b_lines)
 
 
 # -------------------------------- CLI --------------------------------
-
-func line_main(line: String, color: LineColor = LineColor.WHITE) -> void:
-	_line(line, 1, color)
-
-func line_log(line: String, name: String, color: LineColor = LineColor.WHITE) -> void:
-	var line_with_name = "[%s] %s" % [name, line]
-	_line(line_with_name, 4, color)
-
-func line_log_system(line: String) -> void:
-	line_log(line, "System", LineColor.CYAN)
-
 
 # CLI に文字列を表示する
 func _line(line: String, label_id: int = 1, color: LineColor = LineColor.WHITE) -> void:
@@ -149,6 +169,7 @@ func _line(line: String, label_id: int = 1, color: LineColor = LineColor.WHITE) 
 			_label_4.scroll_to_line(9999)
 
 
+# 文字列をパースして処理を実行する
 func _exec_command(line: String) -> void:
 	# コマンドを whitespace で分割する
 	# whitespace 自体は split() の第2引数によって除外される
