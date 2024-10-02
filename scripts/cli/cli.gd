@@ -34,8 +34,8 @@ const HELP_DESCRIPTIONS_LV1 = {
 	},
 	"task": {
 									#
-		"add <emp-id> <mat-id>":    "	従業員のタスクを追加します",
-		"remove <emp-id> <mat-id>": "	従業員のタスクを消去します",
+		"add <emp-id> <mat-id>":    "		従業員のタスクを追加します",
+		"remove <emp-id> <mat-id>":    "	従業員のタスクを消去します",
 	},
 	"mat": {
 		"show <mat-id>": "	素材の詳細を表示します",
@@ -90,29 +90,30 @@ func _input(event: InputEvent) -> void:
 func _process_refresh_label_3() -> void:
 	# 3a
 	var label_3a_lines = []
-	label_3a_lines.append("<会社>")
+	label_3a_lines.append("＜会社＞")
 	label_3a_lines.append_array([
 		"プレイ時間   	%s (x%s)" % [GameManager.uptime_string, GameManager.time_scale],
 		"会社資金   		%s" % [GameManager.company_money],
 	])
 	label_3a_lines.append("\n")
 
-	label_3a_lines.append("<従業員>")
-	label_3a_lines.append("ID, Mntl/Comm/Engn/Art_, Name____")
+	label_3a_lines.append("＜従業員＞")
+	label_3a_lines.append("ID, Mntl/Comm/Engn/Art_, Cost, Name")
 	for employee: EmployeeBase in EmployeeManager.get_employees():
-		label_3a_lines.append("%2s, %3s%s/%3s%s/%3s%s/%3s%s, %4s" % [
+		label_3a_lines.append("%2s, %3s%s/%3s%s/%3s%s/%3s%s, %4s, %s" % [
 			employee.id,
 			employee.specs[0], employee.specs_rank_string[0],
 			employee.specs[1], employee.specs_rank_string[1],
 			employee.specs[2], employee.specs_rank_string[2],
 			employee.specs[3], employee.specs_rank_string[3],
-			employee.screen_name.left(4),
+			employee.cost,
+			employee.screen_name.left(2),
 		])
 	_label_3a.text = "\n".join(label_3a_lines)
 
 	# 3b
 	var label_3b_lines = []
-	label_3b_lines.append("<素材>")
+	label_3b_lines.append("＜素材＞")
 	label_3b_lines.append("ID, Now_/Max_, Name") 
 	for material: MaterialData in MaterialManager.get_materials():
 		var amount = MaterialManager.get_material_amount(material.type)
@@ -232,9 +233,9 @@ func _show_employee(employee_id: int) -> void:
 	if employee == null:
 		return line_main("employee %s: not found!" % employee_id, LineColor.RED)
 
-	line_main("<プロフィール>")
+	line_main("＜プロフィール＞")
 	_line_employee(employee)
-	line_main("<現在設定中のタスク>")
+	line_main("＜現在設定中のタスク＞")
 	_line_employee_task(employee)
 
 
