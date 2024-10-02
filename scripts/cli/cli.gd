@@ -51,7 +51,6 @@ const HELP_DESCRIPTIONS_LV1 = {
 @export var _label_4: RichTextLabel
 
 
-var _version = "v0.0.0"
 var _label_1_lines = []
 var _label_4_lines = []
 
@@ -61,15 +60,6 @@ var _command_history_index = 0
 
 func _ready() -> void:
 	_line_edit.grab_focus()
-
-	# Main
-	line_main("----------------------------------------------------------------", LineColor.GRAY)
-	line_main("GAMANAGE (CLI Mode) %s" % [_version], LineColor.GRAY)
-	line_main("\"help\" と入力するとコマンド一覧が表示されます", LineColor.GRAY)
-	line_main("----------------------------------------------------------------", LineColor.GRAY)
-	# Log
-	line_log("ここには行動ログやヒントが表示されます", "System", LineColor.CYAN)
-	line_log("ヒント: 上下キーで過去のコマンドを再利用できます", "System", LineColor.CYAN)
 
 
 func _process(delta: float) -> void:
@@ -135,13 +125,12 @@ func _process_refresh_label_3() -> void:
 func line_main(line: String, color: LineColor = LineColor.WHITE) -> void:
 	_line(line, 1, color)
 
-
 func line_log(line: String, name: String, color: LineColor = LineColor.WHITE) -> void:
-	#var datetime_dict = Time.get_datetime_dict_from_system()
-	#var datetime_string = Time.get_datetime_string_from_datetime_dict(datetime_dict, true)
-	#var line_with_name = "%s [%s] %s" % [datetime_string, name, line]
 	var line_with_name = "[%s] %s" % [name, line]
 	_line(line_with_name, 4, color)
+
+func line_log_system(line: String) -> void:
+	line_log(line, "System", LineColor.CYAN)
 
 
 # CLI に文字列を表示する

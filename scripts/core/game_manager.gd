@@ -2,6 +2,8 @@
 extends Node
 
 
+var version = "v0.0.0"
+
 # プレイ時間 (秒)
 var uptime_sec: int = 0:
 	get:

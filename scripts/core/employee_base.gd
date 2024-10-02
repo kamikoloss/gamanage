@@ -178,7 +178,7 @@ func _check_task() -> void:
 		if task_material.max_amount <= amount:
 			continue
 		# 消費素材が足りない場合: 次のタスクを見る
-		# 消費素材が設定されていない場合は for が回らないので false にならない
+		# 消費素材が設定されていない場合 (空配列) は for が回らないので false にならない
 		var has_input = true
 		for input in task_material.input:
 			var input_material = input[0]
