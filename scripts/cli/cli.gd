@@ -31,7 +31,9 @@ const HELP_DESCRIPTIONS_LV0 = {
 }
 const HELP_DESCRIPTIONS_LV1 = {
 	"debug": {
-		"x <ratio>": "	ゲームの進行速度を変更します",
+						#
+		"c <code>":     "	チートを実行します",
+		"x <ratio>":    "	ゲームの進行速度を変更します",
 	},
 	"emp": {
 		"show <emp-id>": "	従業員の詳細を表示します",
@@ -195,6 +197,10 @@ func _exec_command(line: String) -> void:
 			if words.size() <= 1:
 				return _help(words)
 			match words[1]:
+				"c":
+					if words.size() <= 2:
+						return _help(words)
+					return _debug_cheat(words[2])
 				"x":
 					if words.size() <= 2:
 						return _help(words)
@@ -235,6 +241,20 @@ func _exec_command(line: String) -> void:
 	line_main("%s: invalid command!" % line, LineColor.RED)
 
 
+# ---------------- CLI debug ----------------
+
+func _debug_cheat(code: String) -> void:
+	match code:
+		# 素材の所持数 MAX
+		"max-amo":
+			for material: MaterialData in MaterialManager.get_materials():
+				MaterialManager.set_material_amount(material.type, 9999)
+			return
+
+	# 不正なチートコードが入力されたとき: エラーを表示する
+	line_main("%s: invalid code!" % code, LineColor.RED)
+
+
 # ---------------- CLI help ----------------
 
 func _help(words: Array[String]) -> void:
@@ -250,7 +270,7 @@ func _help(words: Array[String]) -> void:
 	line_main("\n".join(lines), LineColor.YELLOW)
 
 
-# ---------------- CLI show ----------------
+# ---------------- CLI emp ----------------
 
 func _show_employee(employee_id: int) -> void:
 	var employee = EmployeeManager.get_employee(employee_id)
@@ -285,6 +305,8 @@ func _line_employee_task(employee: EmployeeBase) -> void:
 		var line = "%2s, %s" % [task_material.type, task_material.screen_name]
 		line_main(line)
 
+
+# ---------------- CLI mat ----------------
 
 func _show_material(material_type: int) -> void:
 	var material = MaterialManager.get_material(material_type)
