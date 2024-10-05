@@ -1,6 +1,11 @@
 # ゲーム上の素材を管理するクラス
 extends Node
 
+# 素材がアンロックされたとき
+signal material_unlocked # (MaterialData)
+# 素材の数が増減したとき
+signal material_amount_changed # (MaterialData, <new amount>)
+
 
 # MaterialData のマスターデータ
 const MATERIAL_DATA = {
@@ -80,3 +85,5 @@ func unlock_material(material_type: MaterialData.MaterialType) -> void:
 
 	_unlocked_materials[material_type] = material
 	_material_amounts[material_type] = 0
+	
+	material_unlocked.emit(material)

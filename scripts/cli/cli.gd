@@ -108,6 +108,9 @@ func line_log(line: String, name: String, color: LineColor = LineColor.WHITE) ->
 func line_log_system(line: String) -> void:
 	line_log(line, "System", LineColor.CYAN)
 
+func line_log_tips(line: String) -> void:
+	line_log(line, "Tips", LineColor.GREEN)
+
 
 # ================================ 17. private methods ================================
 

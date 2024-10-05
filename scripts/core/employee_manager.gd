@@ -2,8 +2,8 @@
 extends Node
 
 
-# 従業員がとりかかっているタスクが変わったとき
-signal employee_task_changed
+# 従業員が進めているタスクが変わったとき
+signal employee_task_changed # (EmployeeBase, MaterialData)
 
 
 var _employees: Dictionary = {} # 雇用している従業員のリスト { <id>: EmployeeBase }
