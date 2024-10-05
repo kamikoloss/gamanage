@@ -42,7 +42,7 @@ var cost: int = 0 # 月単価
 var specs: Array[int]:
 	get:
 		return [_spec_mental, _spec_communication, _spec_engineering, _spec_art]
-var specs_rank: Array[SpecRank]:
+var specs_rank: Array:
 	get:
 		return [
 			_get_spec_rank(_spec_mental),
@@ -93,7 +93,7 @@ var _mbti_jp: bool = true # Judging (規範型) vs Perceiving (自由型)
 # タスク関連
 # TODO: MaterialData 以外のタスク
 var _last_worked_time: float = 0.0 # 最後に働いた時間 (Unixtime)
-var _task_list: Array[MaterialData] = [] # タスクリスト
+var _task_list: Array = [] # タスクリスト
 var _task_list_max_length = 3 # タスクリストの最大の長さ
 var _current_task: MaterialData = null # 現在進めているタスク
 var _current_task_progress: float = 0.0 # 現在のタスクの進捗 (生産素材1個 = 1.0)
@@ -127,6 +127,7 @@ func add_task(material: MaterialData) -> Array:
 
 func remove_task(material: MaterialData) -> Array:
 	_task_list = _task_list.filter(func(v): return v.type != material.type)
+	_current_task_progress = 0.0
 	_check_task()
 	return _task_list
 
@@ -146,8 +147,9 @@ func work() -> void:
 
 	# 進捗が 1.0 を超えている場合
 	if 1.0 < _current_task_progress:
-		MaterialManager.increment_amount(_current_task.type, int(floor(_current_task_progress)))
-		_current_task_progress = 0.0
+		var _progress_amount = floor(_current_task_progress) # 整数部分
+		MaterialManager.increment_amount(_current_task.type, int(_progress_amount))
+		_current_task_progress = _current_task_progress - _progress_amount
 		_check_task()
 
 
@@ -165,10 +167,8 @@ func _get_spec_rank_string(spec: int) -> String:
 
 
 # タスクリストの中から現在できるタスクを探す
+# タスクを 追加/削除 されたとき, 素材を作り終えたとき に呼ぶ
 func _check_task() -> void:
-	# タスクが設定されていない場合: 終了する
-	if _task_list.is_empty():
-		return
 	# TODO: 会社資金が足りない場合は作業を止める
 
 	var is_found_task = false
@@ -196,6 +196,7 @@ func _check_task() -> void:
 		# 見つかったタスクが前と違う場合: signal を発火する
 		if preview_task == null or preview_task.type != _current_task.type:
 			task_changed.emit(self, _current_task)
+		# タスクを見るのをやめる
 		break
 
 	# やれるタスクがなくなった場合: signal を発火する
