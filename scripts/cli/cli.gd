@@ -129,16 +129,16 @@ func _process_refresh_label_3() -> void:
 	label_3a_lines.append("\n")
 
 	label_3a_lines.append("＜従業員＞")
-	label_3a_lines.append("ID, Mntl/Comm/Engn/Art_, Cost, Name")
+	label_3a_lines.append("ID, Mntl/Comm/Engn/Art_, Cost, Prog")
 	for employee: EmployeeBase in EmployeeManager.get_employees():
-		label_3a_lines.append("%2s, %3s%s/%3s%s/%3s%s/%3s%s, %4s, %s" % [
+		label_3a_lines.append("%2s, %3s%s/%3s%s/%3s%s/%3s%s, %4s, %4s" % [
 			employee.id,
 			employee.specs[0], employee.specs_rank_string[0],
 			employee.specs[1], employee.specs_rank_string[1],
 			employee.specs[2], employee.specs_rank_string[2],
 			employee.specs[3], employee.specs_rank_string[3],
 			employee.cost,
-			employee.screen_name.left(2),
+			str(employee.progress_percent) + "%",
 		])
 	_label_3a.text = "\n".join(label_3a_lines)
 

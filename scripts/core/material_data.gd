@@ -44,6 +44,6 @@ var goal_base_amount: int = -1
 var input = []
 # 1分あたりの生産量
 var output: int = 0
-# ひとかたまりの生産量
+# 1セットあたりの生産量
 # 消費量より生産量が多いときに設定する
 var unit: int = 1

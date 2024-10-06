@@ -70,6 +70,9 @@ var mbti_roll: String:
 	get:
 		return MBTI_ROLL_DATA[mbti_string]
 
+var progress_percent: int:
+	get:
+		return int(ceil(_current_task_progress * 100))
 var has_task: bool:
 	get:
 		return not _task_list.is_empty()
@@ -186,7 +189,7 @@ func _check_task() -> void:
 
 	var is_found_task = false
 	for task_material: MaterialData in _task_list:
-		# 最大数所持している場合: 次のタスクを見る
+		# 生産素材を最大数所持している場合: 次のタスクを見る
 		var amount = MaterialManager.get_material_amount(task_material.type)
 		if task_material.max_amount <= amount:
 			continue
@@ -196,8 +199,10 @@ func _check_task() -> void:
 		for input in task_material.input:
 			var input_material_type: MaterialData.MaterialType = input[0]
 			var input_amount: int = input[1]
-			var required_amount = int(floor(input_amount / task_material.output))
-			if amount < required_amount:
+			var input_current_amount = MaterialManager.get_material_amount(input_material_type) # 消費素材の現在の量
+			var output_set: int = task_material.output / task_material.unit # 1分あたり何セット生産するか
+			var required_amount = int(ceil(input_amount / output_set)) # 1セット生産するのに何個必要か
+			if input_current_amount < required_amount:
 				has_no_input = true
 		if has_no_input:
 			continue
