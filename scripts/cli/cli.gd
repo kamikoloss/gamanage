@@ -40,8 +40,9 @@ const HELP_DESCRIPTIONS_LV1 = {
 	},
 	"task": {
 									#
-		"add <emp-id> <mat-id>":    "		従業員のタスクを追加します",
-		"remove <emp-id> <mat-id>":    "	従業員のタスクを消去します",
+		"add <emp-id> <mat-id>":    "	従業員のタスクを追加します",
+		"rem <emp-id>":    "			従業員のすべてのタスクを消去します",
+		"rem <emp-id> <mat-id>":    "	従業員の特定のタスクを消去します",
 	},
 	"mat": {
 		"show <mat-id>": "	素材の詳細を表示します",
@@ -232,9 +233,11 @@ func _exec_command(line: String) -> void:
 					if words.size() <= 3:
 						return _help(words)
 					return _task_add(int(words[2]), int(words[3]))
-				"remove":
-					if words.size() <= 3:
+				"rem":
+					if words.size() <= 2:
 						return _help(words)
+					if words.size() <= 3:
+						return _task_remove_all(int(words[2]))
 					return _task_remove(int(words[2]), int(words[3]))
 
 	# コマンドリストにないコマンドが入力されたとき: エラーを表示する
@@ -356,6 +359,16 @@ func _task_add(employee_id: int, material_type: int) -> void:
 		return line_main("material %s: not found!" % material_type, LineColor.RED)
 
 	EmployeeManager.add_task(employee_id, material_type)
+	_line_employee_task(employee)
+
+
+func _task_remove_all(employee_id: int) -> void:
+	var employee = EmployeeManager.get_employee(employee_id)
+	if employee == null:
+		return line_main("employee %s: not found!" % employee_id, LineColor.RED)
+
+	for task_material: MaterialData in employee.get_tasks():
+		EmployeeManager.remove_task(employee_id, task_material.type)
 	_line_employee_task(employee)
 
 

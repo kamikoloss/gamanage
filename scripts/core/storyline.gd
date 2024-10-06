@@ -5,7 +5,7 @@ extends Node
 @export var _cli: CLI
 
 # フラグ群
-var _はじめて素材が足りない事態に遭遇した: bool = false
+var _はじめて素材が足りない: bool = false
 var _はじめてゲームの素材が足りた: bool = false
 var _はじめてゲーム生産が進んだ: bool = false
 

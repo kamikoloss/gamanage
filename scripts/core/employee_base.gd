@@ -148,7 +148,6 @@ func work() -> void:
 	var output_set: int = _current_task.output / _current_task.unit # 1分あたり何セット生産するか
 	var progress: float = output_set * delta * GameManager.time_scale / 60 # 1セットの進捗がどれだけ進んだか
 	_current_task_progress += progress
-	print([output_set, progress, _current_task_progress])
 
 	# 進捗が 1.0 を超えている場合 = 1セット以上生産できた場合
 	if 1.0 < _current_task_progress:
@@ -211,6 +210,7 @@ func _check_task() -> void:
 		is_found_task = true
 		var preview_task = _current_task
 		_current_task = task_material
+		_current_task_progress = 0.0
 		# 見つかったタスクが前と違う場合: signal を発火する
 		if preview_task == null or preview_task.type != _current_task.type:
 			task_changed.emit(self, _current_task)
@@ -220,4 +220,5 @@ func _check_task() -> void:
 	# できるタスクがなくなった場合: signal を発火する
 	if not is_found_task and _current_task != null:
 		_current_task = null
+		_current_task_progress = 0.0
 		task_changed.emit(self, _current_task)
