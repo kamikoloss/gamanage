@@ -96,7 +96,7 @@ var _last_worked_time: float = 0.0 # 最後に働いた時間 (Unixtime)
 var _task_list: Array = [] # タスクリスト
 var _task_list_max_length = 3 # タスクリストの最大の長さ
 var _current_task: MaterialData = null # 現在進めているタスク
-var _current_task_progress: float = 0.0 # 現在のタスクの進捗 (生産素材1個 = 1.0)
+var _current_task_progress: float = 0.0 # 現在のタスクの進捗 (生産素材1セット = 1.0)
 
 
 func _init(screen_name: String) -> void:
@@ -135,21 +135,34 @@ func remove_task(material: MaterialData) -> Array:
 # 割り当てられているタスクを進める
 # 一定時間ごとに呼ばれる前提
 func work() -> void:
-	var delta = Time.get_unix_time_from_system() - _last_worked_time
+	var delta: float = Time.get_unix_time_from_system() - _last_worked_time
 	_last_worked_time = Time.get_unix_time_from_system()
 
 	if _current_task == null:
 		return
 
-	# NOTE: progress は time_scale によっては 2.0 を上回ることがある
-	var progress = _current_task.output * delta * GameManager.time_scale / 60
+	# NOTE: progress は time_scale と work() を呼ぶ頻度によっては 2.0 を上回ることがある
+	var output_set: int = _current_task.output / _current_task.unit # 1分あたり何セット生産するか
+	var progress: float = output_set * delta * GameManager.time_scale / 60 # 1セットの進捗がどれだけ進んだか
 	_current_task_progress += progress
+	print([output_set, progress, _current_task_progress])
 
-	# 進捗が 1.0 を超えている場合
+	# 進捗が 1.0 を超えている場合 = 1セット以上生産できた場合
 	if 1.0 < _current_task_progress:
-		var _progress_amount = floor(_current_task_progress) # 整数部分
-		MaterialManager.increment_amount(_current_task.type, int(_progress_amount))
-		_current_task_progress = _current_task_progress - _progress_amount
+		var progress_int: float = floor(_current_task_progress) # 現在の進捗の整数部分
+		# 生産素材を増やす
+		var increment: int = _current_task.unit * int(progress_int) # 何個増えたか
+		MaterialManager.increase_amount(_current_task.type, increment)
+		# 消費素材を減らす
+		# 消費素材が設定されていない場合 (空配列) は for が回らないので何も減らない
+		for input in _current_task.input:
+			var input_material_type: MaterialData.MaterialType = input[0]
+			var input_amount: int = input[1]
+			var decrement: int = (input_amount / output_set) * int(progress_int) # 何個減ったか
+			MaterialManager.decrease_amount(input_material_type, decrement)
+		# 進捗を減らす
+		_current_task_progress -= progress_int
+		# タスクを確認する
 		_check_task()
 
 
@@ -178,28 +191,28 @@ func _check_task() -> void:
 		if task_material.max_amount <= amount:
 			continue
 		# 消費素材が足りない場合: 次のタスクを見る
-		# 消費素材が設定されていない場合 (空配列) は for が回らないので false にならない
-		var has_input = true
+		# 消費素材が設定されていない場合 (空配列) は for が回らないので true にならない
+		var has_no_input = false
 		for input in task_material.input:
-			var input_material = input[0]
-			var input_amount = input[1]
+			var input_material_type: MaterialData.MaterialType = input[0]
+			var input_amount: int = input[1]
 			var required_amount = int(floor(input_amount / task_material.output))
 			if amount < required_amount:
-				has_input = false
-		if not has_input:
+				has_no_input = true
+		if has_no_input:
 			continue
 
-		# やることが見つかった場合: タスクを見るのをやめる
+		# やることが見つかった場合
 		is_found_task = true
 		var preview_task = _current_task
 		_current_task = task_material
 		# 見つかったタスクが前と違う場合: signal を発火する
 		if preview_task == null or preview_task.type != _current_task.type:
 			task_changed.emit(self, _current_task)
-		# タスクを見るのをやめる
+		# タスクを探すのをやめる
 		break
 
-	# やれるタスクがなくなった場合: signal を発火する
+	# できるタスクがなくなった場合: signal を発火する
 	if not is_found_task and _current_task != null:
 		_current_task = null
 		task_changed.emit(self, _current_task)

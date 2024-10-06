@@ -29,11 +29,11 @@ enum MaterialType {
 }
 
 
-#
+# 素材の種別
 var type: MaterialType
 # 生産素材をこれと同じ扱いにする (代替レシピ用)
 var alias_type: MaterialType
-#
+# 素材の表示名
 var screen_name: String = ""
 # 最大いくつまで保持できるかの初期値
 var max_amount: int = 0
@@ -43,4 +43,7 @@ var goal_base_amount: int = -1
 # 労働力によって生産される場合は空配列とする
 var input = []
 # 1分あたりの生産量
-var output = 0
+var output: int = 0
+# ひとかたまりの生産量
+# 消費量より生産量が多いときに設定する
+var unit: int = 1

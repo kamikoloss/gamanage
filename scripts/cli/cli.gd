@@ -250,6 +250,11 @@ func _debug_cheat(code: String) -> void:
 			for material: MaterialData in MaterialManager.get_materials():
 				MaterialManager.set_material_amount(material.type, 9999)
 			return
+		# 素材の所持最大数 突破
+		"no-max":
+			for material: MaterialData in MaterialManager.get_materials():
+				material.max_amount = 9999
+			return
 
 	# 不正なチートコードが入力されたとき: エラーを表示する
 	line_main("%s: invalid code!" % code, LineColor.RED)
@@ -297,7 +302,7 @@ func _line_employee(employee: EmployeeBase) -> void:
 
 func _line_employee_task(employee: EmployeeBase) -> void:
 	if not employee.has_task:
-		line_main("現在設定中のタスクなし")
+		line_main("なし")
 		return
 
 	line_main("ID, 生産素材")

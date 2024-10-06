@@ -62,8 +62,12 @@ func set_material_amount(material_type: MaterialData.MaterialType, amount: int) 
 	_material_amounts[material_type] = clampi(amount, 0, material.max_amount)
 	return get_material_amount(material_type)
 
-func increment_amount(material_type: MaterialData.MaterialType, amount: int) -> int:
+func increase_amount(material_type: MaterialData.MaterialType, amount: int) -> int:
 	set_material_amount(material_type, get_material_amount(material_type) + amount)
+	return get_material_amount(material_type)
+
+func decrease_amount(material_type: MaterialData.MaterialType, amount: int) -> int:
+	set_material_amount(material_type, get_material_amount(material_type) - amount)
 	return get_material_amount(material_type)
 
 
@@ -78,6 +82,8 @@ func unlock_material(material_type: MaterialData.MaterialType) -> void:
 		material.max_amount = data["max"]
 	if data.has("output"):
 		material.output = data["output"]
+	if data.has("unit"):
+		material.unit = data["unit"]
 	if data.has("input"):
 		material.input = data["input"]
 	if data.has("goal"):
