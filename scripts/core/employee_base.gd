@@ -97,7 +97,7 @@ var _mbti_jp: bool = true # Judging (規範型) vs Perceiving (自由型)
 # TODO: MaterialData 以外のタスク
 var _last_worked_time: float = 0.0 # 最後に働いた時間 (Unixtime)
 var _task_list: Array = [] # タスクリスト
-var _task_list_max_length = 3 # タスクリストの最大の長さ
+var _task_list_max_length = 1 # タスクリストの最大の長さ
 var _current_task: MaterialData = null # 現在進めているタスク
 var _current_task_progress: float = 0.0 # 現在のタスクの進捗 (生産素材1セット = 1.0)
 
@@ -125,6 +125,8 @@ func get_tasks() -> Array:
 func add_task(material: MaterialData) -> Array:
 	if not _task_list.any(func(v): return v.type == material.type):
 		_task_list.append(material)
+		if _task_list_max_length < _task_list.size():
+			_task_list.pop_front()
 	_check_task()
 	return _task_list
 
