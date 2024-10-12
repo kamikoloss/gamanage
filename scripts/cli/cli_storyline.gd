@@ -1,8 +1,9 @@
 # アンロックなどゲームの流れを管理するクラス
-class_name Storyline
+class_name CliStoryline
 extends Node
 
-@export var _cli: CLI
+
+var _cli: Cli
 
 # フラグ群
 var _はじめて素材が足りない: bool = false
@@ -10,7 +11,9 @@ var _はじめてゲームの素材が足りた: bool = false
 var _はじめてゲーム生産が進んだ: bool = false
 
 
-func _ready() -> void:
+func _init(cli: Cli) -> void:
+	_cli = cli
+
 	# signal
 	MaterialManager.material_unlocked.connect(_on_material_unlocked)
 	EmployeeManager.employee_task_changed.connect(_on_employee_task_changed)
@@ -27,10 +30,10 @@ func _ready() -> void:
 	EmployeeManager.add_employee(employee)
 
 	# CLI
-	_cli.line_main("----------------------------------------------------------------", CLI.LineColor.GRAY)
-	_cli.line_main("GAMANAGE (CLI Mode) %s" % [GameManager.version], CLI.LineColor.GRAY)
-	_cli.line_main("\"help\" と入力するとコマンド一覧が表示されます", CLI.LineColor.GRAY)
-	_cli.line_main("----------------------------------------------------------------", CLI.LineColor.GRAY)
+	_cli.line_main("----------------------------------------------------------------", Cli.LineColor.GRAY)
+	_cli.line_main("GAMANAGE (CLI Mode) %s" % [GameManager.version], Cli.LineColor.GRAY)
+	_cli.line_main("\"help\" と入力するとコマンド一覧が表示されます", Cli.LineColor.GRAY)
+	_cli.line_main("----------------------------------------------------------------", Cli.LineColor.GRAY)
 	_cli.line_log_tips("上下キーで過去のコマンドを再利用できます")
 
 

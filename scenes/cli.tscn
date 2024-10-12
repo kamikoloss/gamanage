@@ -1,10 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://dkpouhvxanj4q"]
+[gd_scene load_steps=3 format=3 uid="uid://dkpouhvxanj4q"]
 
 [ext_resource type="Script" path="res://scripts/cli/cli.gd" id="1_ihpgr"]
 [ext_resource type="Theme" uid="uid://b0nala41010j4" path="res://themes/cli.tres" id="2_y108q"]
-[ext_resource type="Script" path="res://scripts/core/storyline.gd" id="3_8ax88"]
 
-[node name="CLI" type="Node" node_paths=PackedStringArray("_line_edit", "_label_1", "_label_3a", "_label_3b", "_label_4")]
+[node name="Cli" type="Node" node_paths=PackedStringArray("_line_edit", "_label_1", "_label_3a", "_label_3b", "_label_4")]
 script = ExtResource("1_ihpgr")
 _line_edit = NodePath("CanvasLayer/LineEdit")
 _label_1 = NodePath("CanvasLayer/RichTextLabel")
@@ -55,7 +54,3 @@ focus_mode = 2
 theme = ExtResource("2_y108q")
 bbcode_enabled = true
 selection_enabled = true
-
-[node name="Storyline" type="Node" parent="." node_paths=PackedStringArray("_cli")]
-script = ExtResource("3_8ax88")
-_cli = NodePath("..")
