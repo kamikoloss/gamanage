@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 GameManager="*res://scripts/core/game_manager.gd"
 EmployeeManager="*res://scripts/core/employee_manager.gd"
 MaterialManager="*res://scripts/core/material_manager.gd"
+SaleManager="*res://scripts/core/sale_manager.gd"
 
 [display]
 

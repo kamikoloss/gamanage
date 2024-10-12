@@ -1,4 +1,5 @@
-# 素材情報を表現するクラス (1個とか1スタックではない)
+# 素材情報を表現するクラス
+# 1インスタンス = 1個とか1スタックではなく個数は MaterialManager で管理する
 class_name MaterialData
 extends Object
 
@@ -30,7 +31,7 @@ enum MaterialType {
 
 
 # 素材の種別
-# ID と表記されることもある
+# "ID" と表記されることもある
 var type: MaterialType
 # 生産素材をこれと同じ扱いにする (代替レシピ用)
 var alias_type: MaterialType

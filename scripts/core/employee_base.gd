@@ -9,7 +9,6 @@ signal task_changed # (EmployeeBase, MaterialData)
 
 
 enum SpecRank { F, E, D, C, B, A, S, X }
-enum TaskType { MATERIAL }
 
 
 # スペックランクの範囲データ [ <from>, <to>, SpecRank ]
@@ -34,9 +33,12 @@ const MBTI_ROLL_DATA = {
 }
 
 
+# ID 雇った順に1ずつ増えていく
 var id: int = 0
+# 表示名
 var screen_name: String = ""
-var cost: int = 0 # 月単価
+# 月単価
+var cost: int = 0
 
 # [ 精神力, コミュ力, エンジニアリング力, アート力 ]
 var specs: Array[int]:

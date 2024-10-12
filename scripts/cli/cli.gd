@@ -22,38 +22,39 @@ const LINE_COLOR_STRING = {
 }
 
 const HELP_DESCRIPTIONS_LV0 = {
-				#
-	"debug":    "	(デバッグ用のコマンドの一覧を表示します)",
-	"emp":    "		(従業員系のコマンドの一覧を表示します)",
+	"debug":    "	デバッグ用のコマンドの一覧を表示します",
+	"emp":    "		従業員系のコマンドの一覧を表示します",
 	"help":    "	すべてのコマンドの一覧を表示します",
-	"mat":    "		(素材系のコマンドの一覧を表示します)",
-	"task":    "	(タスク設定用のコマンドの一覧を表示します)",
+	"mat":    "		素材系のコマンドの一覧を表示します",
+	"sele":    "	ゲーム販売系のコマンドの一覧を表示します",
+	"task":    "	タスク設定用のコマンドの一覧を表示します",
 }
 const HELP_DESCRIPTIONS_LV1 = {
 	"debug": {
-						#
-		"c <code>":     "	チートを実行します",
+		"c <code>":    "	チートを実行します",
 		"x <ratio>":    "	ゲームの進行速度を変更します",
 	},
 	"emp": {
 		"show <emp-id>": "	従業員の詳細を表示します",
 	},
-	"task": {
-									#
-		"add <emp-id> <mat-id>":    "	従業員のタスクを追加します",
-		"rem <emp-id>":    "			従業員のすべてのタスクを消去します",
-		"rem <emp-id> <mat-id>":    "	従業員の特定のタスクを消去します",
-	},
 	"mat": {
 		"show <mat-id>": "	素材の詳細を表示します",
 	},
+	"sale": {
+		"<mat-id> <amount>": "	ゲームを販売します",
+	},
+	"task": {
+		"add <emp-id> <mat-id>":    "	従業員のタスクを追加します",
+		"rem <emp-id>":    "			従業員のすべてのタスクを削除します",
+		"rem <emp-id> <mat-id>":    "	従業員の特定のタスクを削除します",
+	},
 }
+
 
 # ================================ 08. @export variables ================================
 
 @export var _line_edit: LineEdit
 @export var _label_1: RichTextLabel
-#@export var _label_2: RichTextLabel
 @export var _label_3a: RichTextLabel
 @export var _label_3b: RichTextLabel
 @export var _label_4: RichTextLabel
@@ -225,6 +226,8 @@ func _exec_command(line: String) -> void:
 					if words.size() <= 2:
 						return _help(words)
 					return _show_material(int(words[2]))
+		"sale":
+			pass
 		"task":
 			if words.size() <= 1:
 				return _help(words)
