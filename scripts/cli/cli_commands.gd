@@ -24,7 +24,7 @@ const HELP_DESCRIPTIONS_LV1 = {
 		"show <mat-id>": "	素材の詳細を表示します",
 	},
 	"sale": {
-		"<mat-id> <amount>": "	ゲームを販売します",
+		"start": "	ゲームを販売します (対話モード)",
 	},
 	"task": {
 		"add <emp-id> <mat-id>":    "	従業員のタスクを追加します",
@@ -77,7 +77,11 @@ func exec_command(words: Array[String]) -> void:
 						return _help(words)
 					return _show_material(int(words[2]))
 		"sale":
-			pass
+			if words.size() <= 1:
+				return _help(words)
+			match words[1]:
+				"start":
+					return _sale_start()
 		"task":
 			if words.size() <= 1:
 				return _help(words)
@@ -94,7 +98,7 @@ func exec_command(words: Array[String]) -> void:
 					return _task_remove(int(words[2]), int(words[3]))
 
 	# コマンドリストにないコマンドが入力されたとき: エラーを表示する
-	_cli.line_main("invalid command!", Cli.LineColor.RED)
+	_cli.line_main("%s: invalid command!" % [" ".join(words)], Cli.LineColor.RED)
 
 
 # ---------------- debug ----------------
@@ -113,7 +117,7 @@ func _debug_cheat(code: String) -> void:
 			return
 
 	# 不正なチートコードが入力されたとき: エラーを表示する
-	_cli.line_main("invalid code!", Cli.LineColor.RED)
+	_cli.line_main("%s: invalid code!" % [code], Cli.LineColor.RED)
 
 
 # ---------------- help ----------------
@@ -155,6 +159,7 @@ func _line_employee(employee: EmployeeBase) -> void:
 		"アート力   		%3s (%s)" % [employee.specs[3], employee.specs_rank_string[3]],
 	]
 	_cli.line_main("\n".join(lines))
+
 
 func _line_employee_task(employee: EmployeeBase) -> void:
 	if not employee.has_task:
@@ -199,6 +204,16 @@ func _line_material(material: MaterialData) -> void:
 		"完成基準   		%s" % [goal],
 	]
 	_cli.line_main("\n".join(lines))
+
+
+# ---------------- sale ----------------
+
+func _sale_start() -> void:
+	var help_texts: Array[String] = [
+		"ゲームのタイトルを入力してください",
+		"ゲームの素材消費量を指定してください (60-360)",
+	]
+	_cli.start_dialogue("sale", help_texts)
 
 
 # ---------------- task ----------------

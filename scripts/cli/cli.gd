@@ -17,20 +17,25 @@ const LINE_COLOR_STRING = {
 	LineColor.YELLOW: "YELLOW", LineColor.MAGENTA: "MAGENTA", LineColor.CYAN: "CYAN",
 }
 
-
+\
 @export var _line_edit: LineEdit
 @export var _label_1: RichTextLabel
 @export var _label_3a: RichTextLabel
 @export var _label_3b: RichTextLabel
 @export var _label_4: RichTextLabel
 
+
 var _cli_commands: CliCommands
 var _cli_storyline: CliStoryline
 
-var _label_1_lines = []
-var _label_4_lines = []
-var _command_history = []
-var _command_history_index = 0
+var _label_1_lines: Array[String] = []
+var _label_4_lines: Array[String] = []
+var _command_history: Array[String] = []
+var _command_history_index: int = 0
+
+var _is_dialogue_mode: bool = false # 対話モード中か
+var _dialogue_help_texts: Array[String] = [] # 対話モードで表示されるヘルプ
+var _dialogue_input_words: Array[String] = [] # 対話モードで入力した単語
 
 
 func _ready() -> void:
@@ -49,8 +54,11 @@ func _input(event: InputEvent) -> void:
 		match event.keycode:
 			KEY_ENTER:
 				line_main("$ %s" % [_line_edit.text]) # 打ったコマンド自体を表示する
-				_exec_command(_line_edit.text)
-				_line_edit.text = ""
+				if _is_dialogue_mode:
+					continue_dialogue(_line_edit.text)
+				else:
+					_exec_command(_line_edit.text)
+				_line_edit.clear()
 			KEY_UP:
 				if _command_history.is_empty():
 					return
@@ -75,6 +83,49 @@ func line_log_system(line: String) -> void:
 
 func line_log_tips(line: String) -> void:
 	line_log(line, "Tips", LineColor.GREEN)
+
+
+# 会話モードを開始する
+# help_texts の長さは入力される単語数と同じにする
+func start_dialogue(base_command: String, help_texts: Array[String]) -> void:
+	if _is_dialogue_mode:
+		return
+
+	_is_dialogue_mode = true
+	_dialogue_help_texts = help_texts
+	_line_dialogue_help()
+
+# 会話モードを継続する
+func continue_dialogue(word: String) -> void:
+	if not _is_dialogue_mode:
+		return
+
+	_dialogue_input_words.append(word)
+
+	# コマンドを最後まで入力しきったら会話モードを終了する 
+	if _dialogue_input_words.size() == _dialogue_help_texts.size():
+		finish_dialogue()
+	else:
+		_line_dialogue_help()
+
+
+# 会話モードを終了する + コマンドを実行する
+func finish_dialogue() -> void:
+	if not _is_dialogue_mode:
+		return
+
+	# コマンドを実行する
+	_cli_commands.exec_command(_dialogue_input_words)
+
+	_is_dialogue_mode = false
+	_dialogue_help_texts = []
+	_dialogue_input_words = []
+
+# 会話ヘルプを表示する
+func _line_dialogue_help() -> void:
+	var _current_step = _dialogue_input_words.size()
+	var _current_help_text = _dialogue_help_texts[_current_step]
+	line_main(_current_help_text)
 
 
 func _process_refresh_label() -> void:
